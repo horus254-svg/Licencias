@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VeekPOS · Panel de licencias</title>
+<style>
+  :root{
+    --ink:#1c2230;
+    --ink-soft:#5b6472;
+    --paper:#f3f1ea;
+    --panel:#ffffff;
+    --line:#e2ded2;
+    --accent:#2f5d50;
+    --accent-soft:#e4ede9;
+    --danger:#a4432f;
+    --danger-soft:#f7e9e5;
+    --warn:#8a6a1f;
+    --warn-soft:#f6efdd;
+    --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+    --sans: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:var(--sans);
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+  }
+
+  /* ---------- LOGIN ---------- */
+  #login-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .login-card{
+    width:100%;
+    max-width:380px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    padding:40px 36px;
+  }
+  .login-card .mark{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:6px;
+  }
+  .login-card h1{
+    font-size:22px;
+    margin:0 0 26px;
+    font-weight:600;
+  }
+  label{
+    display:block;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    font-family:var(--mono);
+    letter-spacing:.03em;
+  }
+  input, select{
+    width:100%;
+    font-family:var(--sans);
+    font-size:15px;
+    padding:11px 12px;
+    border:1px solid var(--line);
+    background:#fbfaf6;
+    color:var(--ink);
+    outline:none;
+  }
+  input:focus, select:focus{ border-color:var(--accent); background:#fff; }
+  .field{ margin-bottom:16px; }
+  button{
+    font-family:var(--sans);
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    border:none;
+    padding:11px 18px;
+  }
+  .btn-primary{ background:var(--ink); color:#fff; width:100%; margin-top:6px; }
+  .btn-primary:hover{ background:var(--accent); }
+  .btn-secondary{ background:var(--accent-soft); color:var(--accent); }
+  .btn-secondary:hover{ background:#d6e5df; }
+  .btn-danger{ background:var(--danger-soft); color:var(--danger); }
+  .btn-danger:hover{ background:#f0d7cf; }
+  .btn-ghost{ background:transparent; color:var(--ink-soft); border:1px solid var(--line); }
+  .btn-ghost:hover{ border-color:var(--ink-soft); color:var(--ink); }
+  .error-msg{
+    color:var(--danger);
+    font-size:13px;
+    margin-top:12px;
+    display:none;
+  }
+
+  /* ---------- APP ---------- */
+  #app-screen{ display:none; }
+  header.top{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    padding:22px 32px;
+    border-bottom:1px solid var(--line);
+    background:var(--panel);
+  }
+  header.top .brand{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+  }
+  header.top h1{ font-size:18px; margin:2px 0 0; font-weight:600; }
+  header.top .top-actions{ display:flex; gap:10px; }
+
+  main{ padding:28px 32px 60px; max-width:1180px; margin:0 auto; }
+
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
+    margin-bottom:20px;
+  }
+  .stats{ display:flex; gap:18px; font-family:var(--mono); font-size:12px; color:var(--ink-soft); }
+  .stats b{ color:var(--ink); font-size:15px; display:block; font-family:var(--sans); }
+
+  table{ width:100%; border-collapse:collapse; background:var(--panel); }
+  thead th{
+    text-align:left;
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    padding:10px 14px;
+    border-bottom:1px solid var(--line);
+  }
+  tbody td{
+    padding:13px 14px;
+    border-bottom:1px solid var(--line);
+    font-size:13.5px;
+    vertical-align:middle;
+  }
+  tbody tr:hover{ background:#fbfaf6; }
+  .email-cell{ font-weight:600; }
+  .pin-cell{ font-family:var(--mono); letter-spacing:.05em; }
+  .badge{
+    display:inline-block;
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:3px 8px;
+    border-radius:2px;
+  }
+  .badge-activa{ background:var(--accent-soft); color:var(--accent); }
+  .badge-suspendida{ background:var(--danger-soft); color:var(--danger); }
+  .badge-vencida{ background:var(--warn-soft); color:var(--warn); }
+  .row-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+  .row-actions button{ font-size:12px; padding:6px 10px; }
+
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- MODAL ---------- */
+  .overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(28,34,48,.45);
+    align-items:center; justify-content:center;
+    padding:20px;
+    z-index:50;
+  }
+  .overlay.open{ display:flex; }
+  .modal{
+    background:var(--panel);
+    width:100%; max-width:420px;
+    padding:30px 32px;
+    border:1px solid var(--line);
+  }
+  .modal h2{ font-size:18px; margin:0 0 20px; }
+  .modal .modal-actions{ display:flex; gap:10px; margin-top:22px; }
+  .modal .modal-actions button{ flex:1; }
+  .hint{ font-size:12px; color:var(--ink-soft); margin-top:4px; }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:#fff; padding:12px 20px;
+    font-size:13.5px; opacity:0; pointer-events:none;
+    transition:opacity .25s ease;
+    z-index:100;
+  }
+  .toast.show{ opacity:1; }
+  .toast.error{ background:var(--danger); }
+
+  .loading{ font-family:var(--mono); font-size:12px; color:var(--ink-soft); padding:20px 0; }
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="mark">VeekPOS</div>
+    <h1>Panel de licencias</h1>
+
+    <div class="field">
+      <label for="url-servidor">URL del Apps Script</label>
+      <input id="url-servidor" type="text" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <div class="field">
+      <label for="password-login">Contraseña</label>
+      <input id="password-login" type="password" placeholder="••••••••">
+    </div>
+    <button class="btn-primary" id="btn-login">Ingresar</button>
+    <div class="error-msg" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div id="app-screen">
+  <header class="top">
+    <div>
+      <div class="brand">VeekPOS</div>
+      <h1>Panel de licencias</h1>
+    </div>
+    <div class="top-actions">
+      <button class="btn-ghost" id="btn-cambiar-password">Cambiar contraseña</button>
+      <button class="btn-ghost" id="btn-logout">Salir</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <div class="stats">
+        <div><b id="stat-total">–</b>total</div>
+        <div><b id="stat-activas">–</b>activas</div>
+        <div><b id="stat-suspendidas">–</b>suspendidas</div>
+        <div><b id="stat-vencidas">–</b>vencidas</div>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-ghost" id="btn-refrescar">Refrescar</button>
+        <button class="btn-secondary" id="btn-nueva">+ Nueva licencia</button>
+      </div>
+    </div>
+
+    <div id="tabla-container">
+      <div class="loading">Cargando licencias…</div>
+    </div>
+  </main>
+</div>
+
+<!-- ===================== MODAL: Nueva licencia ===================== -->
+<div class="overlay" id="overlay-nueva">
+  <div class="modal">
+    <h2>Nueva licencia</h2>
+    <div class="field">
+      <label>Email del cliente</label>
+      <input id="nueva-email" type="email" placeholder="cliente@ejemplo.com">
+    </div>
+    <div class="field">
+      <label>Plan</label>
+      <select id="nueva-plan">
+        <option value="MENSUAL">Mensual (30 días)</option>
+        <option value="TRIMESTRAL">Trimestral (90 días)</option>
+        <option value="ANUAL">Anual (365 días)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>PIN (opcional — se genera solo si lo dejás vacío)</label>
+      <input id="nueva-pin" type="text" maxlength="6" placeholder="6 dígitos">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="cerrarModal('overlay-nueva')">Cancelar</button>
+      <button class="btn-secondary" id="btn-crear-confirmar">Crear</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: Renovar ===================== -->
+<div class="overlay" id="overlay-renovar">
+  <div class="modal">
+    <h2>Renovar licencia</h2>
+    <p class="hint" id="renovar-email-label" style="margin-bottom:16px;"></p>
+    <div class="field">
+      <label>Días a extender desde hoy (o desde el vencimiento actual si todavía no venció)</label>
+      <input id="renovar-dias" type="number" value="30" min="1">
+    </div>
+    <p class="hint">También podés poner una fecha exacta en vez de días:</p>
+    <div class="field">
+      <label>Fecha de vencimiento (AAAA-MM-DD, opcional)</label>
+      <input id="renovar-fecha" type="date">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="cerrarModal('overlay-renovar')">Cancelar</button>
+      <button class="btn-secondary" id="btn-renovar-confirmar">Renovar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: Cambiar contraseña ===================== -->
+<div class="overlay" id="overlay-password">
+  <div class="modal">
+    <h2>Cambiar contraseña</h2>
+    <div class="field">
+      <label>Nueva contraseña</label>
+      <input id="nueva-password" type="password" placeholder="mínimo 4 caracteres">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="cerrarModal('overlay-password')">Cancelar</button>
+      <button class="btn-secondary" id="btn-password-confirmar">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let SERVER_URL = "";
+let PASSWORD = "";
+let licencias = [];
+let emailEnAccion = "";
+
+// Recordar la URL del servidor (no la contraseña) para no tener que tipearla cada vez
+document.getElementById('url-servidor').value = localStorage.getItem('veekpos_url') || "";
+
+function mostrarToast(mensaje, esError){
+  const t = document.getElementById('toast');
+  t.textContent = mensaje;
+  t.className = 'toast show' + (esError ? ' error' : '');
+  setTimeout(()=> t.classList.remove('show'), 3200);
+}
+
+function cerrarModal(id){ document.getElementById(id).classList.remove('open'); }
+function abrirModal(id){ document.getElementById(id).classList.add('open'); }
+
+async function llamarApi(accion, params){
+  const url = new URL(SERVER_URL);
+  url.searchParams.set('action', accion);
+  url.searchParams.set('password', PASSWORD);
+  for (const clave in params){
+    if (params[clave] !== undefined && params[clave] !== null && params[clave] !== '') {
+      url.searchParams.set(clave, params[clave]);
+    }
+  }
+  const resp = await fetch(url.toString());
+  return resp.json();
+}
+
+// ---------- LOGIN ----------
+document.getElementById('btn-login').addEventListener('click', intentarLogin);
+document.getElementById('password-login').addEventListener('keydown', e => { if (e.key === 'Enter') intentarLogin(); });
+
+async function intentarLogin(){
+  const url = document.getElementById('url-servidor').value.trim();
+  const password = document.getElementById('password-login').value;
+  const errorEl = document.getElementById('login-error');
+  errorEl.style.display = 'none';
+
+  if (!url || !password){
+    errorEl.textContent = 'Completá la URL y la contraseña.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  SERVER_URL = url;
+  PASSWORD = password;
+
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.textContent = 'Verificando…';
+
+  try{
+    const data = await llamarApi('admin_login', {});
+    if (data.success){
+      localStorage.setItem('veekpos_url', url);
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display = 'block';
+      cargarLicencias();
+    } else {
+      errorEl.textContent = data.message || 'No se pudo iniciar sesión.';
+      errorEl.style.display = 'block';
+    }
+  } catch(err){
+    errorEl.textContent = 'No se pudo conectar con el servidor. Revisá la URL.';
+    errorEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Ingresar';
+  }
+}
+
+document.getElementById('btn-logout').addEventListener('click', () => {
+  PASSWORD = "";
+  document.getElementById('password-login').value = "";
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+});
+
+// ---------- LISTAR ----------
+async function cargarLicencias(){
+  const cont = document.getElementById('tabla-container');
+  cont.innerHTML = '<div class="loading">Cargando licencias…</div>';
+  try{
+    const data = await llamarApi('admin_listar', {});
+    if (!data.success){
+      mostrarToast(data.message || 'Error al cargar', true);
+      return;
+    }
+    licencias = data.licencias;
+    renderTabla();
+  } catch(err){
+    cont.innerHTML = '<div class="empty-state">No se pudo conectar con el servidor.</div>';
+  }
+}
+document.getElementById('btn-refrescar').addEventListener('click', cargarLicencias);
+
+function estadoEfectivo(lic){
+  if ((lic.estado || '').toUpperCase() === 'SUSPENDIDA') return 'SUSPENDIDA';
+  if (lic.fechaVencimiento && new Date(lic.fechaVencimiento) < new Date()) return 'VENCIDA';
+  return 'ACTIVA';
+}
+
+function renderTabla(){
+  const cont = document.getElementById('tabla-container');
+
+  const total = licencias.length;
+  const activas = licencias.filter(l => estadoEfectivo(l) === 'ACTIVA').length;
+  const suspendidas = licencias.filter(l => estadoEfectivo(l) === 'SUSPENDIDA').length;
+  const vencidas = licencias.filter(l => estadoEfectivo(l) === 'VENCIDA').length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-activas').textContent = activas;
+  document.getElementById('stat-suspendidas').textContent = suspendidas;
+  document.getElementById('stat-vencidas').textContent = vencidas;
+
+  if (total === 0){
+    cont.innerHTML = '<div class="empty-state">Todavía no creaste ninguna licencia. Usá "Nueva licencia" para empezar.</div>';
+    return;
+  }
+
+  let html = '<table><thead><tr>' +
+    '<th>Email</th><th>PIN</th><th>Plan</th><th>Vence</th><th>Estado</th><th>Últ. validación</th><th></th>' +
+    '</tr></thead><tbody>';
+
+  licencias.forEach(lic => {
+    const estado = estadoEfectivo(lic);
+    const badgeClass = estado === 'ACTIVA' ? 'badge-activa' : (estado === 'SUSPENDIDA' ? 'badge-suspendida' : 'badge-vencida');
+
+    html += '<tr>';
+    html += `<td class="email-cell">${escaparHtml(lic.email)}</td>`;
+    html += `<td class="pin-cell">${escaparHtml(lic.pin)}</td>`;
+    html += `<td>${escaparHtml(lic.plan)}</td>`;
+    html += `<td>${escaparHtml(lic.fechaVencimiento) || '—'}</td>`;
+    html += `<td><span class="badge ${badgeClass}">${estado.toLowerCase()}</span></td>`;
+    html += `<td>${escaparHtml(lic.ultimaValidacion) || '—'}</td>`;
+    html += '<td><div class="row-actions">';
+
+    if (estado === 'SUSPENDIDA'){
+      html += `<button class="btn-secondary" onclick="reactivar('${escaparAtributo(lic.email)}')">Reactivar</button>`;
+    } else {
+      html += `<button class="btn-danger" onclick="suspender('${escaparAtributo(lic.email)}')">Suspender</button>`;
+    }
+    html += `<button class="btn-secondary" onclick="abrirRenovar('${escaparAtributo(lic.email)}')">Renovar</button>`;
+    html += `<button class="btn-ghost" onclick="eliminar('${escaparAtributo(lic.email)}')">Eliminar</button>`;
+    html += '</div></td></tr>';
+  });
+
+  html += '</tbody></table>';
+  cont.innerHTML = html;
+}
+
+function escaparHtml(texto){
+  const div = document.createElement('div');
+  div.textContent = texto === undefined || texto === null ? '' : String(texto);
+  return div.innerHTML;
+}
+function escaparAtributo(texto){
+  return String(texto || '').replace(/'/g, "\\'");
+}
+
+// ---------- CREAR ----------
+document.getElementById('btn-nueva').addEventListener('click', () => {
+  document.getElementById('nueva-email').value = '';
+  document.getElementById('nueva-pin').value = '';
+  document.getElementById('nueva-plan').value = 'MENSUAL';
+  abrirModal('overlay-nueva');
+});
+
+document.getElementById('btn-crear-confirmar').addEventListener('click', async () => {
+  const email = document.getElementById('nueva-email').value.trim();
+  const plan = document.getElementById('nueva-plan').value;
+  const pin = document.getElementById('nueva-pin').value.trim();
+
+  if (!email){ mostrarToast('Falta el email', true); return; }
+
+  const data = await llamarApi('admin_crear', { email, plan, pin });
+  if (data.success){
+    mostrarToast(`Licencia creada. PIN: ${data.pin}`);
+    cerrarModal('overlay-nueva');
+    cargarLicencias();
+  } else {
+    mostrarToast(data.message || 'Error al crear', true);
+  }
+});
+
+// ---------- SUSPENDER / REACTIVAR ----------
+async function suspender(email){
+  if (!confirm(`¿Suspender el acceso de ${email}?`)) return;
+  const data = await llamarApi('admin_suspender', { email });
+  if (data.success){ mostrarToast('Licencia suspendida'); cargarLicencias(); }
+  else mostrarToast(data.message || 'Error', true);
+}
+
+async function reactivar(email){
+  const data = await llamarApi('admin_reactivar', { email });
+  if (data.success){ mostrarToast('Licencia reactivada'); cargarLicencias(); }
+  else mostrarToast(data.message || 'Error', true);
+}
+
+// ---------- RENOVAR ----------
+function abrirRenovar(email){
+  emailEnAccion = email;
+  document.getElementById('renovar-email-label').textContent = email;
+  document.getElementById('renovar-dias').value = 30;
+  document.getElementById('renovar-fecha').value = '';
+  abrirModal('overlay-renovar');
+}
+
+document.getElementById('btn-renovar-confirmar').addEventListener('click', async () => {
+  const dias = document.getElementById('renovar-dias').value;
+  const fecha = document.getElementById('renovar-fecha').value;
+
+  const data = await llamarApi('admin_renovar', { email: emailEnAccion, dias, fecha });
+  if (data.success){
+    mostrarToast(`Renovada hasta ${data.fechaVencimiento}`);
+    cerrarModal('overlay-renovar');
+    cargarLicencias();
+  } else {
+    mostrarToast(data.message || 'Error', true);
+  }
+});
+
+// ---------- ELIMINAR ----------
+async function eliminar(email){
+  if (!confirm(`¿Eliminar definitivamente la licencia de ${email}? Esto no se puede deshacer.`)) return;
+  const data = await llamarApi('admin_eliminar', { email });
+  if (data.success){ mostrarToast('Licencia eliminada'); cargarLicencias(); }
+  else mostrarToast(data.message || 'Error', true);
+}
+
+// ---------- CAMBIAR CONTRASEÑA ----------
+document.getElementById('btn-cambiar-password').addEventListener('click', () => {
+  document.getElementById('nueva-password').value = '';
+  abrirModal('overlay-password');
+});
+
+document.getElementById('btn-password-confirmar').addEventListener('click', async () => {
+  const nuevaPassword = document.getElementById('nueva-password').value;
+  if (nuevaPassword.length < 4){ mostrarToast('Mínimo 4 caracteres', true); return; }
+
+  const data = await llamarApi('admin_cambiar_password', { nuevaPassword });
+  if (data.success){
+    PASSWORD = nuevaPassword;
+    mostrarToast('Contraseña actualizada');
+    cerrarModal('overlay-password');
+  } else {
+    mostrarToast(data.message || 'Error', true);
+  }
+});
+</script>
+
+</body>
+</html>
