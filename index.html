@@ -217,12 +217,12 @@
     <h1>Panel de licencias</h1>
 
     <div class="field">
-      <label for="url-servidor">URL del Apps Script</label>
-      <input id="url-servidor" type="text" placeholder="https://script.google.com/macros/s/.../exec">
+      <label for="username-login">Usuario</label>
+      <input id="username-login" type="text" placeholder="admin" autocomplete="username">
     </div>
     <div class="field">
       <label for="password-login">Contraseña</label>
-      <input id="password-login" type="password" placeholder="••••••••">
+      <input id="password-login" type="password" placeholder="••••••••" autocomplete="current-password">
     </div>
     <button class="btn-primary" id="btn-login">Ingresar</button>
     <div class="error-msg" id="login-error"></div>
@@ -313,11 +313,16 @@
 <!-- ===================== MODAL: Cambiar contraseña ===================== -->
 <div class="overlay" id="overlay-password">
   <div class="modal">
-    <h2>Cambiar contraseña</h2>
+    <h2>Cambiar usuario / contraseña</h2>
     <div class="field">
-      <label>Nueva contraseña</label>
+      <label>Nuevo usuario (opcional, dejar vacío para no cambiarlo)</label>
+      <input id="nuevo-username" type="text" placeholder="mínimo 3 caracteres">
+    </div>
+    <div class="field">
+      <label>Nueva contraseña (opcional, dejar vacío para no cambiarla)</label>
       <input id="nueva-password" type="password" placeholder="mínimo 4 caracteres">
     </div>
+    <p class="hint">Vas a tener que volver a ingresar con las nuevas credenciales la próxima vez.</p>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="cerrarModal('overlay-password')">Cancelar</button>
       <button class="btn-secondary" id="btn-password-confirmar">Guardar</button>
@@ -328,13 +333,17 @@
 <div class="toast" id="toast"></div>
 
 <script>
-let SERVER_URL = "";
+// ============================================================
+// CONFIGURACIÓN — pegá acá la URL de tu Apps Script publicado
+// (Implementar → Nueva implementación → Aplicación web → copiar
+// la "URL de la aplicación web"). Termina en /exec
+// ============================================================
+const SERVER_URL = "PEGA_ACA_LA_URL_DE_TU_APPS_SCRIPT";
+
+let USERNAME = "";
 let PASSWORD = "";
 let licencias = [];
 let emailEnAccion = "";
-
-// Recordar la URL del servidor (no la contraseña) para no tener que tipearla cada vez
-document.getElementById('url-servidor').value = localStorage.getItem('veekpos_url') || "";
 
 function mostrarToast(mensaje, esError){
   const t = document.getElementById('toast');
@@ -349,6 +358,7 @@ function abrirModal(id){ document.getElementById(id).classList.add('open'); }
 async function llamarApi(accion, params){
   const url = new URL(SERVER_URL);
   url.searchParams.set('action', accion);
+  url.searchParams.set('username', USERNAME);
   url.searchParams.set('password', PASSWORD);
   for (const clave in params){
     if (params[clave] !== undefined && params[clave] !== null && params[clave] !== '') {
@@ -362,20 +372,27 @@ async function llamarApi(accion, params){
 // ---------- LOGIN ----------
 document.getElementById('btn-login').addEventListener('click', intentarLogin);
 document.getElementById('password-login').addEventListener('keydown', e => { if (e.key === 'Enter') intentarLogin(); });
+document.getElementById('username-login').addEventListener('keydown', e => { if (e.key === 'Enter') intentarLogin(); });
 
 async function intentarLogin(){
-  const url = document.getElementById('url-servidor').value.trim();
+  const username = document.getElementById('username-login').value.trim();
   const password = document.getElementById('password-login').value;
   const errorEl = document.getElementById('login-error');
   errorEl.style.display = 'none';
 
-  if (!url || !password){
-    errorEl.textContent = 'Completá la URL y la contraseña.';
+  if (!SERVER_URL || SERVER_URL.indexOf('PEGA_ACA') !== -1){
+    errorEl.textContent = 'Falta configurar la URL del Apps Script en el código del panel.';
     errorEl.style.display = 'block';
     return;
   }
 
-  SERVER_URL = url;
+  if (!username || !password){
+    errorEl.textContent = 'Completá el usuario y la contraseña.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  USERNAME = username;
   PASSWORD = password;
 
   const btn = document.getElementById('btn-login');
@@ -384,7 +401,6 @@ async function intentarLogin(){
   try{
     const data = await llamarApi('admin_login', {});
     if (data.success){
-      localStorage.setItem('veekpos_url', url);
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app-screen').style.display = 'block';
       cargarLicencias();
@@ -393,7 +409,7 @@ async function intentarLogin(){
       errorEl.style.display = 'block';
     }
   } catch(err){
-    errorEl.textContent = 'No se pudo conectar con el servidor. Revisá la URL.';
+    errorEl.textContent = 'No se pudo conectar con el servidor. Revisá la URL configurada en el código.';
     errorEl.style.display = 'block';
   } finally {
     btn.disabled = false; btn.textContent = 'Ingresar';
@@ -401,6 +417,7 @@ async function intentarLogin(){
 }
 
 document.getElementById('btn-logout').addEventListener('click', () => {
+  USERNAME = "";
   PASSWORD = "";
   document.getElementById('password-login').value = "";
   document.getElementById('app-screen').style.display = 'none';
@@ -560,18 +577,24 @@ async function eliminar(email){
 
 // ---------- CAMBIAR CONTRASEÑA ----------
 document.getElementById('btn-cambiar-password').addEventListener('click', () => {
+  document.getElementById('nuevo-username').value = '';
   document.getElementById('nueva-password').value = '';
   abrirModal('overlay-password');
 });
 
 document.getElementById('btn-password-confirmar').addEventListener('click', async () => {
+  const nuevoUsername = document.getElementById('nuevo-username').value.trim();
   const nuevaPassword = document.getElementById('nueva-password').value;
-  if (nuevaPassword.length < 4){ mostrarToast('Mínimo 4 caracteres', true); return; }
 
-  const data = await llamarApi('admin_cambiar_password', { nuevaPassword });
+  if (!nuevoUsername && !nuevaPassword){ mostrarToast('No indicaste ningún cambio', true); return; }
+  if (nuevoUsername && nuevoUsername.length < 3){ mostrarToast('El usuario debe tener al menos 3 caracteres', true); return; }
+  if (nuevaPassword && nuevaPassword.length < 4){ mostrarToast('La contraseña debe tener al menos 4 caracteres', true); return; }
+
+  const data = await llamarApi('admin_cambiar_password', { nuevoUsername, nuevaPassword });
   if (data.success){
-    PASSWORD = nuevaPassword;
-    mostrarToast('Contraseña actualizada');
+    if (nuevoUsername) USERNAME = nuevoUsername;
+    if (nuevaPassword) PASSWORD = nuevaPassword;
+    mostrarToast('Credenciales actualizadas');
     cerrarModal('overlay-password');
   } else {
     mostrarToast(data.message || 'Error', true);
