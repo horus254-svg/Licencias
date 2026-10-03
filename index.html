@@ -206,6 +206,14 @@
   .toast.error{ background:var(--danger); }
 
   .loading{ font-family:var(--mono); font-size:12px; color:var(--ink-soft); padding:20px 0; }
+
+  .link-btn{
+    background:none; border:none; padding:0; margin-top:18px;
+    font-weight:400; font-size:13px; color:var(--ink-soft);
+    text-decoration:underline; text-underline-offset:3px;
+  }
+  .link-btn:hover{ color:var(--accent); }
+  .ok-msg{ color:var(--accent); font-size:13px; margin:0 0 16px; }
 </style>
 </head>
 <body>
@@ -226,6 +234,7 @@
     </div>
     <button class="btn-primary" id="btn-login">Ingresar</button>
     <div class="error-msg" id="login-error"></div>
+    <button class="link-btn" id="btn-olvide">¿Olvidaste tu contraseña?</button>
   </div>
 </div>
 
@@ -326,6 +335,48 @@
     <div class="modal-actions">
       <button class="btn-ghost" onclick="cerrarModal('overlay-password')">Cancelar</button>
       <button class="btn-secondary" id="btn-password-confirmar">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: Recuperar contraseña ===================== -->
+<div class="overlay" id="overlay-recuperar">
+  <div class="modal">
+    <h2>Recuperar contraseña</h2>
+
+    <!-- Paso 1 -->
+    <div id="recuperar-paso1">
+      <p class="hint" style="margin:0 0 16px;">Te vamos a mandar un código de 6 dígitos al correo de la cuenta de Google dueña del Apps Script.</p>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="cerrarModal('overlay-recuperar')">Cancelar</button>
+        <button class="btn-secondary" id="btn-recuperar-enviar">Enviar código</button>
+      </div>
+    </div>
+
+    <!-- Paso 2 -->
+    <div id="recuperar-paso2" style="display:none;">
+      <p class="ok-msg" id="recuperar-destino"></p>
+      <div class="field">
+        <label>Código recibido</label>
+        <input id="recuperar-codigo" type="text" inputmode="numeric" maxlength="6" placeholder="6 dígitos" autocomplete="one-time-code">
+      </div>
+      <div class="field">
+        <label>Nueva contraseña</label>
+        <input id="recuperar-password" type="password" placeholder="mínimo 4 caracteres" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>Repetir nueva contraseña</label>
+        <input id="recuperar-password2" type="password" autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label>Nuevo usuario (opcional)</label>
+        <input id="recuperar-username" type="text" placeholder="dejar vacío para mantener el actual">
+      </div>
+      <p class="hint">El correo también incluye tu usuario actual.</p>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="btn-recuperar-reenviar">Reenviar código</button>
+        <button class="btn-secondary" id="btn-recuperar-confirmar">Guardar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -598,6 +649,81 @@ document.getElementById('btn-password-confirmar').addEventListener('click', asyn
     cerrarModal('overlay-password');
   } else {
     mostrarToast(data.message || 'Error', true);
+  }
+});
+
+// ---------- RECUPERAR CONTRASEÑA ----------
+async function llamarApiPublica(accion, params){
+  const url = new URL(SERVER_URL);
+  url.searchParams.set('action', accion);
+  for (const clave in params){
+    if (params[clave] !== undefined && params[clave] !== null && params[clave] !== '') {
+      url.searchParams.set(clave, params[clave]);
+    }
+  }
+  const resp = await fetch(url.toString());
+  return resp.json();
+}
+
+document.getElementById('btn-olvide').addEventListener('click', () => {
+  document.getElementById('recuperar-paso1').style.display = 'block';
+  document.getElementById('recuperar-paso2').style.display = 'none';
+  ['recuperar-codigo','recuperar-password','recuperar-password2','recuperar-username']
+    .forEach(id => document.getElementById(id).value = '');
+  abrirModal('overlay-recuperar');
+});
+
+async function enviarCodigoRecuperacion(btn){
+  const textoOriginal = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Enviando…';
+  try{
+    const data = await llamarApiPublica('admin_recuperar_solicitar', {});
+    if (data.success){
+      document.getElementById('recuperar-destino').textContent =
+        `Código enviado a ${data.destino}. Vence en ${data.minutos} minutos (revisá también spam).`;
+      document.getElementById('recuperar-paso1').style.display = 'none';
+      document.getElementById('recuperar-paso2').style.display = 'block';
+      document.getElementById('recuperar-codigo').focus();
+    } else {
+      mostrarToast(data.message || 'No se pudo enviar el código', true);
+    }
+  } catch(err){
+    mostrarToast('No se pudo conectar con el servidor.', true);
+  } finally {
+    btn.disabled = false; btn.textContent = textoOriginal;
+  }
+}
+document.getElementById('btn-recuperar-enviar').addEventListener('click', e => enviarCodigoRecuperacion(e.currentTarget));
+document.getElementById('btn-recuperar-reenviar').addEventListener('click', e => enviarCodigoRecuperacion(e.currentTarget));
+
+document.getElementById('btn-recuperar-confirmar').addEventListener('click', async e => {
+  const codigo = document.getElementById('recuperar-codigo').value.trim();
+  const nuevaPassword = document.getElementById('recuperar-password').value;
+  const repetir = document.getElementById('recuperar-password2').value;
+  const nuevoUsername = document.getElementById('recuperar-username').value.trim();
+
+  if (!/^\d{6}$/.test(codigo)){ mostrarToast('El código tiene 6 dígitos', true); return; }
+  if (nuevaPassword.length < 4){ mostrarToast('La contraseña debe tener al menos 4 caracteres', true); return; }
+  if (nuevaPassword !== repetir){ mostrarToast('Las contraseñas no coinciden', true); return; }
+  if (nuevoUsername && nuevoUsername.length < 3){ mostrarToast('El usuario debe tener al menos 3 caracteres', true); return; }
+
+  const btn = e.currentTarget;
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  try{
+    const data = await llamarApiPublica('admin_recuperar_confirmar', { codigo, nuevaPassword, nuevoUsername });
+    if (data.success){
+      cerrarModal('overlay-recuperar');
+      document.getElementById('username-login').value = data.username;
+      document.getElementById('password-login').value = '';
+      document.getElementById('password-login').focus();
+      mostrarToast(`Contraseña actualizada. Ingresá con el usuario "${data.username}".`);
+    } else {
+      mostrarToast(data.message || 'No se pudo restablecer', true);
+    }
+  } catch(err){
+    mostrarToast('No se pudo conectar con el servidor.', true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Guardar';
   }
 });
 </script>
