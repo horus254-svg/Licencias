@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VeekPOS · Panel de licencias</title>
+<title>Veek · Panel de licencias</title>
 <style>
   :root{
     --ink:#1c2230;
@@ -17,203 +17,165 @@
     --danger-soft:#f7e9e5;
     --warn:#8a6a1f;
     --warn-soft:#f6efdd;
+    --info:#2f4f7d;
+    --info-soft:#e6ecf5;
     --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
     --sans: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:var(--sans);
-    background:var(--paper);
-    color:var(--ink);
-    min-height:100vh;
-  }
+  body{ margin:0; font-family:var(--sans); background:var(--paper); color:var(--ink); min-height:100vh; }
 
   /* ---------- LOGIN ---------- */
-  #login-screen{
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:24px;
+  #login-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .login-card{ width:100%; max-width:380px; background:var(--panel); border:1px solid var(--line); padding:40px 36px; }
+  .mark{ font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+  .login-card h1{ font-size:22px; margin:0 0 26px; font-weight:600; }
+  label{ display:block; font-size:12px; color:var(--ink-soft); margin-bottom:6px; font-family:var(--mono); letter-spacing:.03em; }
+  input, select, textarea{
+    width:100%; font-family:var(--sans); font-size:15px; padding:11px 12px;
+    border:1px solid var(--line); background:#fbfaf6; color:var(--ink); outline:none;
   }
-  .login-card{
-    width:100%;
-    max-width:380px;
-    background:var(--panel);
-    border:1px solid var(--line);
-    padding:40px 36px;
-  }
-  .login-card .mark{
-    font-family:var(--mono);
-    font-size:12px;
-    letter-spacing:.14em;
-    text-transform:uppercase;
-    color:var(--accent);
-    margin-bottom:6px;
-  }
-  .login-card h1{
-    font-size:22px;
-    margin:0 0 26px;
-    font-weight:600;
-  }
-  label{
-    display:block;
-    font-size:12px;
-    color:var(--ink-soft);
-    margin-bottom:6px;
-    font-family:var(--mono);
-    letter-spacing:.03em;
-  }
-  input, select{
-    width:100%;
-    font-family:var(--sans);
-    font-size:15px;
-    padding:11px 12px;
-    border:1px solid var(--line);
-    background:#fbfaf6;
-    color:var(--ink);
-    outline:none;
-  }
-  input:focus, select:focus{ border-color:var(--accent); background:#fff; }
+  textarea{ resize:vertical; min-height:70px; }
+  input[type=file]{ padding:9px; font-size:13px; background:#fff; }
+  input[type=checkbox]{ width:auto; }
+  input:focus, select:focus, textarea:focus{ border-color:var(--accent); background:#fff; }
   .field{ margin-bottom:16px; }
-  button{
-    font-family:var(--sans);
-    font-weight:600;
-    font-size:14px;
-    cursor:pointer;
-    border:none;
-    padding:11px 18px;
-  }
-  .btn-primary{ background:var(--ink); color:#fff; width:100%; margin-top:6px; }
-  .btn-primary:hover{ background:var(--accent); }
+  button{ font-family:var(--sans); font-weight:600; font-size:14px; cursor:pointer; border:none; padding:11px 18px; }
+  button:disabled{ opacity:.55; cursor:default; }
+  .btn-primary{ background:var(--ink); color:#fff; }
+  .btn-primary:hover:not(:disabled){ background:var(--accent); }
+  .login-card .btn-primary{ width:100%; margin-top:6px; }
   .btn-secondary{ background:var(--accent-soft); color:var(--accent); }
-  .btn-secondary:hover{ background:#d6e5df; }
+  .btn-secondary:hover:not(:disabled){ background:#d6e5df; }
   .btn-danger{ background:var(--danger-soft); color:var(--danger); }
-  .btn-danger:hover{ background:#f0d7cf; }
+  .btn-danger:hover:not(:disabled){ background:#f0d7cf; }
   .btn-ghost{ background:transparent; color:var(--ink-soft); border:1px solid var(--line); }
-  .btn-ghost:hover{ border-color:var(--ink-soft); color:var(--ink); }
-  .error-msg{
-    color:var(--danger);
-    font-size:13px;
-    margin-top:12px;
-    display:none;
-  }
+  .btn-ghost:hover:not(:disabled){ border-color:var(--ink-soft); color:var(--ink); }
+  .error-msg{ color:var(--danger); font-size:13px; margin-top:12px; display:none; }
 
   /* ---------- APP ---------- */
   #app-screen{ display:none; }
   header.top{
-    display:flex;
-    align-items:baseline;
-    justify-content:space-between;
-    padding:22px 32px;
-    border-bottom:1px solid var(--line);
-    background:var(--panel);
-  }
-  header.top .brand{
-    font-family:var(--mono);
-    font-size:12px;
-    letter-spacing:.14em;
-    text-transform:uppercase;
-    color:var(--accent);
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    padding:18px 32px 0; border-bottom:1px solid var(--line); background:var(--panel);
   }
   header.top h1{ font-size:18px; margin:2px 0 0; font-weight:600; }
-  header.top .top-actions{ display:flex; gap:10px; }
-
-  main{ padding:28px 32px 60px; max-width:1180px; margin:0 auto; }
-
-  .toolbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    flex-wrap:wrap;
-    gap:12px;
-    margin-bottom:20px;
+  header.top .top-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  header.top .top-actions button{ padding:8px 14px; font-size:13px; }
+  .tabs{ display:flex; gap:4px; width:100%; margin-top:10px; overflow-x:auto; }
+  .tab{
+    background:none; color:var(--ink-soft); font-weight:600; font-size:14px; padding:12px 16px;
+    border-bottom:2px solid transparent; white-space:nowrap;
   }
-  .stats{ display:flex; gap:18px; font-family:var(--mono); font-size:12px; color:var(--ink-soft); }
-  .stats b{ color:var(--ink); font-size:15px; display:block; font-family:var(--sans); }
+  .tab:hover{ color:var(--ink); }
+  .tab.activa{ color:var(--ink); border-bottom-color:var(--accent); }
+  .tab .cuenta{ font-family:var(--mono); font-size:11px; font-weight:400; color:var(--ink-soft); margin-left:4px; }
 
+  main{ padding:28px 32px 60px; max-width:1240px; margin:0 auto; }
+  .seccion{ display:none; }
+  .seccion.activa{ display:block; }
+
+  .toolbar{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
+  .toolbar .acciones{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .stats{ display:flex; gap:22px; font-family:var(--mono); font-size:12px; color:var(--ink-soft); flex-wrap:wrap; }
+  .stats b{ color:var(--ink); font-size:15px; display:block; font-family:var(--sans); }
+  .stats .alerta b{ color:var(--danger); }
+  .stats .aviso b{ color:var(--warn); }
+
+  .filtros{ display:flex; gap:6px; flex-wrap:wrap; }
+  .chip{ background:var(--panel); border:1px solid var(--line); color:var(--ink-soft); font-size:12.5px; padding:6px 12px; font-weight:600; }
+  .chip.activa{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .buscar{ max-width:240px; padding:7px 10px; font-size:13.5px; }
+
+  .tabla-scroll{ overflow-x:auto; background:var(--panel); border:1px solid var(--line); }
   table{ width:100%; border-collapse:collapse; background:var(--panel); }
   thead th{
-    text-align:left;
-    font-family:var(--mono);
-    font-size:11px;
-    letter-spacing:.06em;
-    text-transform:uppercase;
-    color:var(--ink-soft);
-    padding:10px 14px;
-    border-bottom:1px solid var(--line);
+    text-align:left; font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-soft); padding:10px 14px; border-bottom:1px solid var(--line); white-space:nowrap;
   }
-  tbody td{
-    padding:13px 14px;
-    border-bottom:1px solid var(--line);
-    font-size:13.5px;
-    vertical-align:middle;
-  }
+  tbody td{ padding:12px 14px; border-bottom:1px solid var(--line); font-size:13.5px; vertical-align:middle; }
+  tbody tr:last-child td{ border-bottom:none; }
   tbody tr:hover{ background:#fbfaf6; }
   .email-cell{ font-weight:600; }
+  .sub{ display:block; font-size:12px; color:var(--ink-soft); font-weight:400; margin-top:2px; }
+  .mono{ font-family:var(--mono); letter-spacing:.03em; }
   .pin-cell{ font-family:var(--mono); letter-spacing:.05em; }
   .badge{
-    display:inline-block;
-    font-family:var(--mono);
-    font-size:10.5px;
-    letter-spacing:.04em;
-    text-transform:uppercase;
-    padding:3px 8px;
-    border-radius:2px;
+    display:inline-block; font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; text-transform:uppercase;
+    padding:3px 8px; border-radius:2px; white-space:nowrap;
   }
-  .badge-activa{ background:var(--accent-soft); color:var(--accent); }
-  .badge-suspendida{ background:var(--danger-soft); color:var(--danger); }
-  .badge-vencida{ background:var(--warn-soft); color:var(--warn); }
+  .badge-activa, .badge-ok{ background:var(--accent-soft); color:var(--accent); }
+  .badge-suspendida, .badge-mal{ background:var(--danger-soft); color:var(--danger); }
+  .badge-vencida, .badge-atrasada{ background:var(--warn-soft); color:var(--warn); }
+  .badge-veekpos{ background:var(--info-soft); color:var(--info); }
+  .badge-veekiq{ background:#efe6f5; color:#6a3d85; }
+  .badge-neutra{ background:#eeece5; color:var(--ink-soft); }
   .row-actions{ display:flex; gap:6px; flex-wrap:wrap; }
   .row-actions button{ font-size:12px; padding:6px 10px; }
+  .empty-state{ text-align:center; padding:60px 20px; color:var(--ink-soft); background:var(--panel); border:1px solid var(--line); }
+  .loading{ font-family:var(--mono); font-size:12px; color:var(--ink-soft); padding:20px 0; }
 
-  .empty-state{
-    text-align:center;
-    padding:60px 20px;
-    color:var(--ink-soft);
-  }
+  /* ---------- Versiones ---------- */
+  .grid-2{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.25fr); gap:20px; align-items:start; margin-bottom:28px; }
+  .tarjeta{ background:var(--panel); border:1px solid var(--line); padding:22px 24px; }
+  .tarjeta h2{ font-size:16px; margin:0 0 4px; }
+  .tarjeta .hint{ margin:0 0 16px; }
+  .version-grande{ font-family:var(--mono); font-size:30px; font-weight:600; letter-spacing:.02em; margin:8px 0 4px; }
+  .dato{ display:flex; justify-content:space-between; gap:12px; font-size:13px; padding:7px 0; border-top:1px solid var(--line); }
+  .dato span:first-child{ color:var(--ink-soft); }
+  .notas{ white-space:pre-wrap; font-size:13px; background:#fbfaf6; border:1px solid var(--line); padding:10px 12px; margin-top:10px; }
+  .fila-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .pasos{ list-style:none; padding:0; margin:16px 0 0; font-size:13px; }
+  .pasos li{ display:flex; gap:10px; align-items:baseline; padding:5px 0; color:var(--ink-soft); }
+  .pasos li .icono{ font-family:var(--mono); width:18px; flex:none; text-align:center; }
+  .pasos li.hecho{ color:var(--accent); }
+  .pasos li.en-curso{ color:var(--ink); font-weight:600; }
+  .pasos li.fallo{ color:var(--danger); }
+  .barra{ height:4px; background:var(--line); margin-top:4px; }
+  .barra > div{ height:100%; background:var(--accent); width:0; transition:width .2s; }
+  .caja-aviso{ font-size:13px; padding:12px 14px; margin-top:14px; border:1px solid; }
+  .caja-aviso.error{ background:var(--danger-soft); border-color:#e8c5bb; color:var(--danger); }
+  .caja-aviso.info{ background:var(--warn-soft); border-color:#e8d9b0; color:var(--warn); }
+  .caja-aviso.ok{ background:var(--accent-soft); border-color:#c5dbd2; color:var(--accent); }
+  .caja-aviso a{ color:inherit; font-weight:600; }
+  .archivo-info{ font-size:12px; color:var(--ink-soft); margin-top:5px; font-family:var(--mono); }
+  a.link{ color:var(--accent); font-weight:600; text-underline-offset:3px; }
 
   /* ---------- MODAL ---------- */
   .overlay{
-    display:none;
-    position:fixed; inset:0;
-    background:rgba(28,34,48,.45);
-    align-items:center; justify-content:center;
-    padding:20px;
-    z-index:50;
+    display:none; position:fixed; inset:0; background:rgba(28,34,48,.45);
+    align-items:center; justify-content:center; padding:20px; z-index:50;
   }
   .overlay.open{ display:flex; }
-  .modal{
-    background:var(--panel);
-    width:100%; max-width:420px;
-    padding:30px 32px;
-    border:1px solid var(--line);
-  }
+  .modal{ background:var(--panel); width:100%; max-width:440px; padding:30px 32px; border:1px solid var(--line); max-height:92vh; overflow:auto; }
   .modal h2{ font-size:18px; margin:0 0 20px; }
   .modal .modal-actions{ display:flex; gap:10px; margin-top:22px; }
   .modal .modal-actions button{ flex:1; }
-  .hint{ font-size:12px; color:var(--ink-soft); margin-top:4px; }
-
+  .hint{ font-size:12px; color:var(--ink-soft); margin-top:4px; line-height:1.5; }
   .toast{
     position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-    background:var(--ink); color:#fff; padding:12px 20px;
-    font-size:13.5px; opacity:0; pointer-events:none;
-    transition:opacity .25s ease;
-    z-index:100;
+    background:var(--ink); color:#fff; padding:12px 20px; font-size:13.5px; opacity:0; pointer-events:none;
+    transition:opacity .25s ease; z-index:100; max-width:calc(100vw - 32px);
   }
   .toast.show{ opacity:1; }
   .toast.error{ background:var(--danger); }
-
-  .loading{ font-family:var(--mono); font-size:12px; color:var(--ink-soft); padding:20px 0; }
-
   .link-btn{
-    background:none; border:none; padding:0; margin-top:18px;
-    font-weight:400; font-size:13px; color:var(--ink-soft);
+    background:none; border:none; padding:0; margin-top:18px; font-weight:400; font-size:13px; color:var(--ink-soft);
     text-decoration:underline; text-underline-offset:3px;
   }
   .link-btn:hover{ color:var(--accent); }
   .ok-msg{ color:var(--accent); font-size:13px; margin:0 0 16px; }
+
+  @media (max-width: 860px){
+    .grid-2{ grid-template-columns:1fr; }
+  }
+  @media (max-width: 600px){
+    header.top{ padding:14px 16px 0; }
+    main{ padding:20px 16px 50px; }
+    .fila-2{ grid-template-columns:1fr; }
+    .modal{ padding:24px 20px; }
+    .buscar{ max-width:none; }
+  }
 </style>
 </head>
 <body>
@@ -221,9 +183,8 @@
 <!-- ===================== LOGIN ===================== -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="mark">VeekPOS</div>
+    <div class="mark">VeekPOS · VeekIQ</div>
     <h1>Panel de licencias</h1>
-
     <div class="field">
       <label for="username-login">Usuario</label>
       <input id="username-login" type="text" placeholder="admin" autocomplete="username">
@@ -242,32 +203,110 @@
 <div id="app-screen">
   <header class="top">
     <div>
-      <div class="brand">VeekPOS</div>
+      <div class="mark">VeekPOS · VeekIQ</div>
       <h1>Panel de licencias</h1>
     </div>
     <div class="top-actions">
+      <button class="btn-ghost" id="btn-github">GitHub</button>
       <button class="btn-ghost" id="btn-cambiar-password">Cambiar contraseña</button>
       <button class="btn-ghost" id="btn-logout">Salir</button>
     </div>
+    <nav class="tabs">
+      <button class="tab activa" data-tab="licencias">Licencias <span class="cuenta" id="tab-cuenta-licencias"></span></button>
+      <button class="tab" data-tab="instalaciones">Instalaciones <span class="cuenta" id="tab-cuenta-instalaciones"></span></button>
+      <button class="tab" data-tab="versiones">Versiones de VeekPOS</button>
+    </nav>
   </header>
 
   <main>
-    <div class="toolbar">
-      <div class="stats">
-        <div><b id="stat-total">–</b>total</div>
-        <div><b id="stat-activas">–</b>activas</div>
-        <div><b id="stat-suspendidas">–</b>suspendidas</div>
-        <div><b id="stat-vencidas">–</b>vencidas</div>
+    <!-- ---------- LICENCIAS ---------- -->
+    <section class="seccion activa" id="sec-licencias">
+      <div class="toolbar">
+        <div class="stats">
+          <div><b id="stat-total">–</b>total</div>
+          <div><b id="stat-activas">–</b>activas</div>
+          <div><b id="stat-suspendidas">–</b>suspendidas</div>
+          <div><b id="stat-vencidas">–</b>vencidas</div>
+        </div>
+        <div class="acciones">
+          <div class="filtros" id="filtro-licencias">
+            <button class="chip activa" data-f="todos">Todas</button>
+            <button class="chip" data-f="VeekPOS">VeekPOS</button>
+            <button class="chip" data-f="VeekIQ">VeekIQ</button>
+            <button class="chip" data-f="">Sin producto</button>
+          </div>
+          <button class="btn-ghost" id="btn-refrescar">Refrescar</button>
+          <button class="btn-secondary" id="btn-nueva">+ Nueva licencia</button>
+        </div>
       </div>
-      <div style="display:flex; gap:10px;">
-        <button class="btn-ghost" id="btn-refrescar">Refrescar</button>
-        <button class="btn-secondary" id="btn-nueva">+ Nueva licencia</button>
-      </div>
-    </div>
+      <div id="tabla-container"><div class="loading">Cargando licencias…</div></div>
+    </section>
 
-    <div id="tabla-container">
-      <div class="loading">Cargando licencias…</div>
-    </div>
+    <!-- ---------- INSTALACIONES ---------- -->
+    <section class="seccion" id="sec-instalaciones">
+      <div class="toolbar">
+        <div class="stats" id="stats-instalaciones"></div>
+        <div class="acciones">
+          <div class="filtros" id="filtro-instalaciones">
+            <button class="chip activa" data-f="todos">Todos</button>
+            <button class="chip" data-f="VeekPOS">VeekPOS</button>
+            <button class="chip" data-f="VeekIQ">VeekIQ</button>
+            <button class="chip" data-f="Sin identificar">Sin identificar</button>
+          </div>
+          <input class="buscar" id="buscar-instalaciones" type="search" placeholder="Buscar negocio, email o equipo">
+          <button class="btn-ghost" id="btn-refrescar-instalaciones">Refrescar</button>
+        </div>
+      </div>
+      <div id="tabla-instalaciones"><div class="loading">Cargando instalaciones…</div></div>
+      <p class="hint" style="margin-top:12px;">Cada equipo se registra cuando activa o valida su licencia (y las cajas secundarias de VeekPOS, cuando consultan si hay versión nueva). VeekIQ y las VeekPOS anteriores a la 2.3.0 no informan versión: para separarlas, marcá el producto de su licencia en la pestaña Licencias.</p>
+    </section>
+
+    <!-- ---------- VERSIONES ---------- -->
+    <section class="seccion" id="sec-versiones">
+      <div class="grid-2">
+        <div class="tarjeta" id="tarjeta-actual">
+          <div class="mark">Versión que reciben las cajas</div>
+          <div id="actual-contenido"><div class="loading">Cargando…</div></div>
+        </div>
+
+        <div class="tarjeta">
+          <h2>Publicar versión nueva</h2>
+          <p class="hint">Sube el instalador y el backend a GitHub y avisa a todas las cajas de VeekPOS. La app se actualiza sola al cerrarse; el backend lo actualizás vos a mano en cada negocio (las cajas esperan a que su backend llegue a la versión mínima).</p>
+          <div id="aviso-github-publicar"></div>
+          <div class="field">
+            <label for="pub-exe">Instalador (desktop/dist/VeekPOS-Setup-x.y.z.exe)</label>
+            <input id="pub-exe" type="file" accept=".exe">
+            <div class="archivo-info" id="pub-exe-info"></div>
+          </div>
+          <div class="field">
+            <label for="pub-backend">Backend: el .zip de la versión (veekPOS-vx.y.z.zip) o el code.gs</label>
+            <input id="pub-backend" type="file" accept=".zip,.gs,.js,.txt">
+            <div class="archivo-info" id="pub-backend-info"></div>
+          </div>
+          <div class="fila-2">
+            <div class="field">
+              <label for="pub-version">Versión de la app</label>
+              <input id="pub-version" type="text" placeholder="2.3.0" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label for="pub-backend-minimo">Backend mínimo</label>
+              <input id="pub-backend-minimo" type="text" placeholder="2.3.0" inputmode="decimal">
+            </div>
+          </div>
+          <p class="hint" style="margin:-8px 0 14px;">Las cajas no se actualizan hasta que el backend de su negocio tenga, como mínimo, esta versión.</p>
+          <div class="field">
+            <label for="pub-notas">Qué cambió (lo ven en el panel de cada caja)</label>
+            <textarea id="pub-notas" placeholder="Ej.: Catálogo PDF con el banner de la página. Cualquier caja publica el catálogo."></textarea>
+          </div>
+          <button class="btn-primary" id="btn-publicar" style="width:100%;">Publicar versión</button>
+          <ul class="pasos" id="pub-pasos" style="display:none;"></ul>
+          <div id="pub-resultado"></div>
+        </div>
+      </div>
+
+      <div class="toolbar"><h2 style="font-size:16px;margin:0;">Historial</h2><button class="btn-ghost" id="btn-refrescar-versiones">Refrescar</button></div>
+      <div id="tabla-versiones"><div class="loading">Cargando versiones…</div></div>
+    </section>
   </main>
 </div>
 
@@ -279,21 +318,60 @@
       <label>Email del cliente</label>
       <input id="nueva-email" type="email" placeholder="cliente@ejemplo.com">
     </div>
+    <div class="fila-2">
+      <div class="field">
+        <label>Producto</label>
+        <select id="nueva-producto">
+          <option value="VeekPOS">VeekPOS</option>
+          <option value="VeekIQ">VeekIQ</option>
+          <option value="">Sin indicar</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Plan</label>
+        <select id="nueva-plan">
+          <option value="MENSUAL">Mensual (30 días)</option>
+          <option value="TRIMESTRAL">Trimestral (90 días)</option>
+          <option value="ANUAL">Anual (365 días)</option>
+        </select>
+      </div>
+    </div>
     <div class="field">
-      <label>Plan</label>
-      <select id="nueva-plan">
-        <option value="MENSUAL">Mensual (30 días)</option>
-        <option value="TRIMESTRAL">Trimestral (90 días)</option>
-        <option value="ANUAL">Anual (365 días)</option>
-      </select>
+      <label>Negocio (opcional)</label>
+      <input id="nueva-negocio" type="text" placeholder="Ej.: Jireh Mayorista">
     </div>
     <div class="field">
       <label>PIN (opcional — se genera solo si lo dejás vacío)</label>
       <input id="nueva-pin" type="text" maxlength="6" placeholder="6 dígitos">
     </div>
     <div class="modal-actions">
-      <button class="btn-ghost" onclick="cerrarModal('overlay-nueva')">Cancelar</button>
+      <button class="btn-ghost" data-cerrar="overlay-nueva">Cancelar</button>
       <button class="btn-secondary" id="btn-crear-confirmar">Crear</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: Editar licencia ===================== -->
+<div class="overlay" id="overlay-editar">
+  <div class="modal">
+    <h2>Editar licencia</h2>
+    <p class="hint" id="editar-email-label" style="margin:-10px 0 16px;"></p>
+    <div class="field">
+      <label>Producto</label>
+      <select id="editar-producto">
+        <option value="VeekPOS">VeekPOS</option>
+        <option value="VeekIQ">VeekIQ</option>
+        <option value="">Sin indicar</option>
+      </select>
+      <p class="hint">Sirve para separar los equipos en Instalaciones. No cambia nada en la app del cliente.</p>
+    </div>
+    <div class="field">
+      <label>Negocio</label>
+      <input id="editar-negocio" type="text" placeholder="Ej.: Jireh Mayorista">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" data-cerrar="overlay-editar">Cancelar</button>
+      <button class="btn-secondary" id="btn-editar-confirmar">Guardar</button>
     </div>
   </div>
 </div>
@@ -313,8 +391,51 @@
       <input id="renovar-fecha" type="date">
     </div>
     <div class="modal-actions">
-      <button class="btn-ghost" onclick="cerrarModal('overlay-renovar')">Cancelar</button>
+      <button class="btn-ghost" data-cerrar="overlay-renovar">Cancelar</button>
       <button class="btn-secondary" id="btn-renovar-confirmar">Renovar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: GitHub ===================== -->
+<div class="overlay" id="overlay-github">
+  <div class="modal">
+    <h2>Repositorio de actualizaciones</h2>
+    <p class="hint" style="margin:-10px 0 16px;">Un repositorio <b>público</b> de GitHub solo para las versiones (instalador y backend). Crealo con un README para que no quede vacío. Las cajas bajan de ahí el instalador.</p>
+    <div class="fila-2">
+      <div class="field">
+        <label>Usuario u organización</label>
+        <input id="gh-owner" type="text" placeholder="horus254-svg">
+      </div>
+      <div class="field">
+        <label>Repositorio</label>
+        <input id="gh-repo" type="text" placeholder="veekpos-actualizaciones">
+      </div>
+    </div>
+    <div class="field">
+      <label>Token de acceso</label>
+      <input id="gh-token" type="password" placeholder="github_pat_…" autocomplete="off">
+      <p class="hint">GitHub → Settings → Developer settings → Fine-grained tokens → acceso solo a ese repositorio, permiso <b>Contents: Read and write</b>. Queda guardado solo en este navegador, nunca en el servidor.</p>
+    </div>
+    <label style="display:flex;gap:8px;align-items:center;font-family:var(--sans);font-size:13px;color:var(--ink);">
+      <input id="gh-recordar" type="checkbox" checked> Recordar en este equipo
+    </label>
+    <div id="gh-estado"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" data-cerrar="overlay-github">Cerrar</button>
+      <button class="btn-secondary" id="btn-gh-guardar">Probar y guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: Confirmar ===================== -->
+<div class="overlay" id="overlay-confirmar">
+  <div class="modal">
+    <h2 id="confirmar-titulo">Confirmar</h2>
+    <p id="confirmar-mensaje" style="font-size:14px;line-height:1.5;margin:0;white-space:pre-line;"></p>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="btn-confirmar-no">Cancelar</button>
+      <button class="btn-danger" id="btn-confirmar-si">Confirmar</button>
     </div>
   </div>
 </div>
@@ -333,7 +454,7 @@
     </div>
     <p class="hint">Vas a tener que volver a ingresar con las nuevas credenciales la próxima vez.</p>
     <div class="modal-actions">
-      <button class="btn-ghost" onclick="cerrarModal('overlay-password')">Cancelar</button>
+      <button class="btn-ghost" data-cerrar="overlay-password">Cancelar</button>
       <button class="btn-secondary" id="btn-password-confirmar">Guardar</button>
     </div>
   </div>
@@ -343,17 +464,13 @@
 <div class="overlay" id="overlay-recuperar">
   <div class="modal">
     <h2>Recuperar contraseña</h2>
-
-    <!-- Paso 1 -->
     <div id="recuperar-paso1">
       <p class="hint" style="margin:0 0 16px;">Te vamos a mandar un código de 6 dígitos al correo de la cuenta de Google dueña del Apps Script.</p>
       <div class="modal-actions">
-        <button class="btn-ghost" onclick="cerrarModal('overlay-recuperar')">Cancelar</button>
+        <button class="btn-ghost" data-cerrar="overlay-recuperar">Cancelar</button>
         <button class="btn-secondary" id="btn-recuperar-enviar">Enviar código</button>
       </div>
     </div>
-
-    <!-- Paso 2 -->
     <div id="recuperar-paso2" style="display:none;">
       <p class="ok-msg" id="recuperar-destino"></p>
       <div class="field">
@@ -383,28 +500,57 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 // ============================================================
-// CONFIGURACIÓN — pegá acá la URL de tu Apps Script publicado
-// (Implementar → Nueva implementación → Aplicación web → copiar
-// la "URL de la aplicación web"). Termina en /exec
+// CONFIGURACIÓN — URL del Apps Script de licencias publicado
+// (Implementar → Administrar implementaciones → URL que termina en /exec)
 // ============================================================
 const SERVER_URL = "https://script.google.com/macros/s/AKfycbygrGvC481UoNPEfCGgY29TW-CU9L0n4lNO0qKLA5IBVI8eSTkjKZyghIlyLbnB4xRi/exec";
+const GITHUB_API = "https://api.github.com";
+const CLAVE_GITHUB = "veek_licencias_github";
 
 let USERNAME = "";
 let PASSWORD = "";
 let licencias = [];
+let instalaciones = [];
+let versiones = [];
+let ultimaVeekPOS = null;
 let emailEnAccion = "";
+let filtroLicencias = "todos";
+let filtroInstalaciones = "todos";
+
+const $ = (id) => document.getElementById(id);
 
 function mostrarToast(mensaje, esError){
-  const t = document.getElementById('toast');
+  const t = $('toast');
   t.textContent = mensaje;
   t.className = 'toast show' + (esError ? ' error' : '');
-  setTimeout(()=> t.classList.remove('show'), 3200);
+  clearTimeout(mostrarToast._t);
+  mostrarToast._t = setTimeout(()=> t.classList.remove('show'), 3600);
+}
+function cerrarModal(id){ $(id).classList.remove('open'); }
+function abrirModal(id){ $(id).classList.add('open'); }
+document.querySelectorAll('[data-cerrar]').forEach(b => b.addEventListener('click', () => cerrarModal(b.dataset.cerrar)));
+
+/** Confirmación propia (sin confirm() del navegador) */
+function confirmarAccion(mensaje, onConfirmar, titulo, textoBoton){
+  $('confirmar-titulo').textContent = titulo || 'Confirmar';
+  $('confirmar-mensaje').textContent = mensaje;
+  $('btn-confirmar-si').textContent = textoBoton || 'Confirmar';
+  const si = $('btn-confirmar-si'), no = $('btn-confirmar-no');
+  const limpiar = () => { si.onclick = null; no.onclick = null; cerrarModal('overlay-confirmar'); };
+  si.onclick = () => { limpiar(); onConfirmar(); };
+  no.onclick = limpiar;
+  abrirModal('overlay-confirmar');
 }
 
-function cerrarModal(id){ document.getElementById(id).classList.remove('open'); }
-function abrirModal(id){ document.getElementById(id).classList.add('open'); }
+function escaparHtml(texto){
+  const div = document.createElement('div');
+  div.textContent = texto === undefined || texto === null ? '' : String(texto);
+  return div.innerHTML;
+}
+function escaparAtributo(texto){ return escaparHtml(texto).replace(/'/g, '&#39;').replace(/"/g, '&quot;'); }
 
 async function llamarApi(accion, params){
   const url = new URL(SERVER_URL);
@@ -412,49 +558,83 @@ async function llamarApi(accion, params){
   url.searchParams.set('username', USERNAME);
   url.searchParams.set('password', PASSWORD);
   for (const clave in params){
-    if (params[clave] !== undefined && params[clave] !== null && params[clave] !== '') {
-      url.searchParams.set(clave, params[clave]);
-    }
+    if (params[clave] !== undefined && params[clave] !== null && params[clave] !== '') url.searchParams.set(clave, params[clave]);
+  }
+  const resp = await fetch(url.toString());
+  return resp.json();
+}
+async function llamarApiPublica(accion, params){
+  const url = new URL(SERVER_URL);
+  url.searchParams.set('action', accion);
+  for (const clave in params){
+    if (params[clave] !== undefined && params[clave] !== null && params[clave] !== '') url.searchParams.set(clave, params[clave]);
   }
   const resp = await fetch(url.toString());
   return resp.json();
 }
 
+function compararVersiones(a, b){
+  const pa = String(a || '0').split(/[.\-+]/).map(x => parseInt(x, 10) || 0);
+  const pb = String(b || '0').split(/[.\-+]/).map(x => parseInt(x, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length, 3); i++){
+    const x = pa[i] || 0, y = pb[i] || 0;
+    if (x !== y) return x < y ? -1 : 1;
+  }
+  return 0;
+}
+const versionValida = (v) => /^\d+\.\d+\.\d+$/.test(String(v || '').trim());
+
+function haceCuanto(ms){
+  if (!ms) return '—';
+  const min = Math.round((Date.now() - ms) / 60000);
+  if (min < 2) return 'recién';
+  if (min < 60) return 'hace ' + min + ' min';
+  const h = Math.round(min / 60);
+  if (h < 24) return 'hace ' + h + ' h';
+  const d = Math.round(h / 24);
+  return 'hace ' + d + (d === 1 ? ' día' : ' días');
+}
+function formatearBytes(n){
+  if (n > 1048576) return (n / 1048576).toFixed(1) + ' MB';
+  return Math.max(1, Math.round(n / 1024)) + ' KB';
+}
+
+// ---------- PESTAÑAS ----------
+document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('activa', t === tab));
+  document.querySelectorAll('.seccion').forEach(s => s.classList.toggle('activa', s.id === 'sec-' + tab.dataset.tab));
+  if (tab.dataset.tab === 'versiones') { cargarVersiones(); mostrarAvisoGithub(); }
+  if (tab.dataset.tab === 'instalaciones') cargarInstalaciones();
+}));
+
 // ---------- LOGIN ----------
-document.getElementById('btn-login').addEventListener('click', intentarLogin);
-document.getElementById('password-login').addEventListener('keydown', e => { if (e.key === 'Enter') intentarLogin(); });
-document.getElementById('username-login').addEventListener('keydown', e => { if (e.key === 'Enter') intentarLogin(); });
+$('btn-login').addEventListener('click', intentarLogin);
+$('password-login').addEventListener('keydown', e => { if (e.key === 'Enter') intentarLogin(); });
+$('username-login').addEventListener('keydown', e => { if (e.key === 'Enter') intentarLogin(); });
 
 async function intentarLogin(){
-  const username = document.getElementById('username-login').value.trim();
-  const password = document.getElementById('password-login').value;
-  const errorEl = document.getElementById('login-error');
+  const username = $('username-login').value.trim();
+  const password = $('password-login').value;
+  const errorEl = $('login-error');
   errorEl.style.display = 'none';
-
   if (!SERVER_URL || SERVER_URL.indexOf('PEGA_ACA') !== -1){
     errorEl.textContent = 'Falta configurar la URL del Apps Script en el código del panel.';
-    errorEl.style.display = 'block';
-    return;
+    errorEl.style.display = 'block'; return;
   }
-
   if (!username || !password){
     errorEl.textContent = 'Completá el usuario y la contraseña.';
-    errorEl.style.display = 'block';
-    return;
+    errorEl.style.display = 'block'; return;
   }
-
-  USERNAME = username;
-  PASSWORD = password;
-
-  const btn = document.getElementById('btn-login');
+  USERNAME = username; PASSWORD = password;
+  const btn = $('btn-login');
   btn.disabled = true; btn.textContent = 'Verificando…';
-
   try{
     const data = await llamarApi('admin_login', {});
     if (data.success){
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app-screen').style.display = 'block';
+      $('login-screen').style.display = 'none';
+      $('app-screen').style.display = 'block';
       cargarLicencias();
+      cargarInstalaciones(true);
     } else {
       errorEl.textContent = data.message || 'No se pudo iniciar sesión.';
       errorEl.style.display = 'block';
@@ -467,266 +647,710 @@ async function intentarLogin(){
   }
 }
 
-document.getElementById('btn-logout').addEventListener('click', () => {
-  USERNAME = "";
-  PASSWORD = "";
-  document.getElementById('password-login').value = "";
-  document.getElementById('app-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
+$('btn-logout').addEventListener('click', () => {
+  USERNAME = ""; PASSWORD = "";
+  $('password-login').value = "";
+  $('app-screen').style.display = 'none';
+  $('login-screen').style.display = 'flex';
 });
 
-// ---------- LISTAR ----------
+/* =========================================================
+   LICENCIAS
+========================================================= */
 async function cargarLicencias(){
-  const cont = document.getElementById('tabla-container');
+  const cont = $('tabla-container');
   cont.innerHTML = '<div class="loading">Cargando licencias…</div>';
   try{
     const data = await llamarApi('admin_listar', {});
-    if (!data.success){
-      mostrarToast(data.message || 'Error al cargar', true);
-      return;
-    }
+    if (!data.success){ mostrarToast(data.message || 'Error al cargar', true); return; }
     licencias = data.licencias;
     renderTabla();
   } catch(err){
     cont.innerHTML = '<div class="empty-state">No se pudo conectar con el servidor.</div>';
   }
 }
-document.getElementById('btn-refrescar').addEventListener('click', cargarLicencias);
+$('btn-refrescar').addEventListener('click', () => { cargarLicencias(); cargarInstalaciones(true); });
 
 function estadoEfectivo(lic){
   if ((lic.estado || '').toUpperCase() === 'SUSPENDIDA') return 'SUSPENDIDA';
   if (lic.fechaVencimiento && new Date(lic.fechaVencimiento) < new Date()) return 'VENCIDA';
   return 'ACTIVA';
 }
+function badgeProducto(p){
+  if (p === 'VeekPOS') return '<span class="badge badge-veekpos">VeekPOS</span>';
+  if (p === 'VeekIQ') return '<span class="badge badge-veekiq">VeekIQ</span>';
+  return '<span class="badge badge-neutra">' + (p ? escaparHtml(p) : 'sin indicar') + '</span>';
+}
+
+$('filtro-licencias').addEventListener('click', e => {
+  const chip = e.target.closest('.chip'); if (!chip) return;
+  filtroLicencias = chip.dataset.f;
+  $('filtro-licencias').querySelectorAll('.chip').forEach(c => c.classList.toggle('activa', c === chip));
+  renderTabla();
+});
 
 function renderTabla(){
-  const cont = document.getElementById('tabla-container');
-
+  const cont = $('tabla-container');
   const total = licencias.length;
-  const activas = licencias.filter(l => estadoEfectivo(l) === 'ACTIVA').length;
-  const suspendidas = licencias.filter(l => estadoEfectivo(l) === 'SUSPENDIDA').length;
-  const vencidas = licencias.filter(l => estadoEfectivo(l) === 'VENCIDA').length;
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-activas').textContent = activas;
-  document.getElementById('stat-suspendidas').textContent = suspendidas;
-  document.getElementById('stat-vencidas').textContent = vencidas;
+  $('stat-total').textContent = total;
+  $('stat-activas').textContent = licencias.filter(l => estadoEfectivo(l) === 'ACTIVA').length;
+  $('stat-suspendidas').textContent = licencias.filter(l => estadoEfectivo(l) === 'SUSPENDIDA').length;
+  $('stat-vencidas').textContent = licencias.filter(l => estadoEfectivo(l) === 'VENCIDA').length;
+  $('tab-cuenta-licencias').textContent = total ? '(' + total + ')' : '';
 
   if (total === 0){
     cont.innerHTML = '<div class="empty-state">Todavía no creaste ninguna licencia. Usá "Nueva licencia" para empezar.</div>';
     return;
   }
+  const lista = licencias.filter(l => filtroLicencias === 'todos' || (l.producto || '') === filtroLicencias);
+  if (!lista.length){ cont.innerHTML = '<div class="empty-state">No hay licencias con ese filtro.</div>'; return; }
 
-  let html = '<table><thead><tr>' +
-    '<th>Email</th><th>PIN</th><th>Plan</th><th>Vence</th><th>Estado</th><th>Últ. validación</th><th></th>' +
+  // Equipos de cada licencia: por email, y las cajas secundarias (que no validan licencia) por nombre de negocio
+  const equiposDe = (lic) => instalaciones.filter(i => (i.email && i.email.toLowerCase() === String(lic.email).toLowerCase()) ||
+    (!i.email && lic.negocio && (i.negocio || '').toLowerCase() === String(lic.negocio).toLowerCase())).length;
+
+  let html = '<div class="tabla-scroll"><table><thead><tr>' +
+    '<th>Email / negocio</th><th>Producto</th><th>PIN</th><th>Plan</th><th>Vence</th><th>Estado</th><th>Equipos</th><th>Últ. validación</th><th></th>' +
     '</tr></thead><tbody>';
-
-  licencias.forEach(lic => {
+  lista.forEach(lic => {
     const estado = estadoEfectivo(lic);
     const badgeClass = estado === 'ACTIVA' ? 'badge-activa' : (estado === 'SUSPENDIDA' ? 'badge-suspendida' : 'badge-vencida');
-
+    const email = lic.email;
+    const equipos = equiposDe(lic);
     html += '<tr>';
-    html += `<td class="email-cell">${escaparHtml(lic.email)}</td>`;
+    html += `<td class="email-cell">${escaparHtml(email)}${lic.negocio ? `<span class="sub">${escaparHtml(lic.negocio)}</span>` : ''}</td>`;
+    html += `<td>${badgeProducto(lic.producto)}</td>`;
     html += `<td class="pin-cell">${escaparHtml(lic.pin)}</td>`;
     html += `<td>${escaparHtml(lic.plan)}</td>`;
     html += `<td>${escaparHtml(lic.fechaVencimiento) || '—'}</td>`;
     html += `<td><span class="badge ${badgeClass}">${estado.toLowerCase()}</span></td>`;
+    html += `<td>${equipos ? `<button class="link-btn" style="margin:0" data-ver-equipos="${escaparAtributo(lic.negocio || email)}">${equipos}</button>` : '—'}</td>`;
     html += `<td>${escaparHtml(lic.ultimaValidacion) || '—'}</td>`;
     html += '<td><div class="row-actions">';
-
-    if (estado === 'SUSPENDIDA'){
-      html += `<button class="btn-secondary" onclick="reactivar('${escaparAtributo(lic.email)}')">Reactivar</button>`;
-    } else {
-      html += `<button class="btn-danger" onclick="suspender('${escaparAtributo(lic.email)}')">Suspender</button>`;
-    }
-    html += `<button class="btn-secondary" onclick="abrirRenovar('${escaparAtributo(lic.email)}')">Renovar</button>`;
-    html += `<button class="btn-ghost" onclick="eliminar('${escaparAtributo(lic.email)}')">Eliminar</button>`;
+    html += `<button class="btn-ghost" data-accion="editar" data-email="${escaparAtributo(email)}">Editar</button>`;
+    if (estado === 'SUSPENDIDA') html += `<button class="btn-secondary" data-accion="reactivar" data-email="${escaparAtributo(email)}">Reactivar</button>`;
+    else html += `<button class="btn-danger" data-accion="suspender" data-email="${escaparAtributo(email)}">Suspender</button>`;
+    html += `<button class="btn-secondary" data-accion="renovar" data-email="${escaparAtributo(email)}">Renovar</button>`;
+    html += `<button class="btn-ghost" data-accion="eliminar" data-email="${escaparAtributo(email)}">Eliminar</button>`;
     html += '</div></td></tr>';
   });
-
-  html += '</tbody></table>';
+  html += '</tbody></table></div>';
   cont.innerHTML = html;
 }
 
-function escaparHtml(texto){
-  const div = document.createElement('div');
-  div.textContent = texto === undefined || texto === null ? '' : String(texto);
-  return div.innerHTML;
-}
-function escaparAtributo(texto){
-  return String(texto || '').replace(/'/g, "\\'");
-}
+$('tabla-container').addEventListener('click', e => {
+  const ver = e.target.closest('[data-ver-equipos]');
+  if (ver){
+    $('buscar-instalaciones').value = ver.dataset.verEquipos;
+    document.querySelector('.tab[data-tab="instalaciones"]').click();
+    return;
+  }
+  const b = e.target.closest('[data-accion]'); if (!b) return;
+  const email = b.dataset.email;
+  if (b.dataset.accion === 'editar') abrirEditar(email);
+  if (b.dataset.accion === 'suspender') suspender(email);
+  if (b.dataset.accion === 'reactivar') reactivar(email);
+  if (b.dataset.accion === 'renovar') abrirRenovar(email);
+  if (b.dataset.accion === 'eliminar') eliminar(email);
+});
 
-// ---------- CREAR ----------
-document.getElementById('btn-nueva').addEventListener('click', () => {
-  document.getElementById('nueva-email').value = '';
-  document.getElementById('nueva-pin').value = '';
-  document.getElementById('nueva-plan').value = 'MENSUAL';
+// crear
+$('btn-nueva').addEventListener('click', () => {
+  $('nueva-email').value = ''; $('nueva-pin').value = ''; $('nueva-negocio').value = '';
+  $('nueva-plan').value = 'MENSUAL'; $('nueva-producto').value = 'VeekPOS';
   abrirModal('overlay-nueva');
 });
-
-document.getElementById('btn-crear-confirmar').addEventListener('click', async () => {
-  const email = document.getElementById('nueva-email').value.trim();
-  const plan = document.getElementById('nueva-plan').value;
-  const pin = document.getElementById('nueva-pin').value.trim();
-
+$('btn-crear-confirmar').addEventListener('click', async () => {
+  const email = $('nueva-email').value.trim();
   if (!email){ mostrarToast('Falta el email', true); return; }
-
-  const data = await llamarApi('admin_crear', { email, plan, pin });
-  if (data.success){
-    mostrarToast(`Licencia creada. PIN: ${data.pin}`);
-    cerrarModal('overlay-nueva');
-    cargarLicencias();
-  } else {
-    mostrarToast(data.message || 'Error al crear', true);
-  }
+  const data = await llamarApi('admin_crear', {
+    email, plan: $('nueva-plan').value, pin: $('nueva-pin').value.trim(),
+    producto: $('nueva-producto').value, negocio: $('nueva-negocio').value.trim()
+  });
+  if (data.success){ mostrarToast(`Licencia creada. PIN: ${data.pin}`); cerrarModal('overlay-nueva'); cargarLicencias(); }
+  else mostrarToast(data.message || 'Error al crear', true);
 });
 
-// ---------- SUSPENDER / REACTIVAR ----------
-async function suspender(email){
-  if (!confirm(`¿Suspender el acceso de ${email}?`)) return;
-  const data = await llamarApi('admin_suspender', { email });
-  if (data.success){ mostrarToast('Licencia suspendida'); cargarLicencias(); }
-  else mostrarToast(data.message || 'Error', true);
+// editar producto / negocio
+function abrirEditar(email){
+  const lic = licencias.find(l => l.email === email) || {};
+  emailEnAccion = email;
+  $('editar-email-label').textContent = email;
+  $('editar-producto').value = lic.producto || '';
+  $('editar-negocio').value = lic.negocio || '';
+  abrirModal('overlay-editar');
 }
+$('btn-editar-confirmar').addEventListener('click', async () => {
+  const data = await llamarApi('admin_editar_licencia', { email: emailEnAccion, producto: $('editar-producto').value || '-', negocio: $('editar-negocio').value.trim() || '-' });
+  if (data.success){ mostrarToast('Licencia actualizada'); cerrarModal('overlay-editar'); cargarLicencias(); cargarInstalaciones(true); }
+  else mostrarToast(data.message || 'Error', true);
+});
 
+function suspender(email){
+  confirmarAccion(`¿Suspender el acceso de ${email}? La app deja de funcionar en cuanto valide la licencia.`, async () => {
+    const data = await llamarApi('admin_suspender', { email });
+    if (data.success){ mostrarToast('Licencia suspendida'); cargarLicencias(); }
+    else mostrarToast(data.message || 'Error', true);
+  }, 'Suspender licencia', 'Suspender');
+}
 async function reactivar(email){
   const data = await llamarApi('admin_reactivar', { email });
   if (data.success){ mostrarToast('Licencia reactivada'); cargarLicencias(); }
   else mostrarToast(data.message || 'Error', true);
 }
-
-// ---------- RENOVAR ----------
 function abrirRenovar(email){
   emailEnAccion = email;
-  document.getElementById('renovar-email-label').textContent = email;
-  document.getElementById('renovar-dias').value = 30;
-  document.getElementById('renovar-fecha').value = '';
+  $('renovar-email-label').textContent = email;
+  $('renovar-dias').value = 30; $('renovar-fecha').value = '';
   abrirModal('overlay-renovar');
 }
+$('btn-renovar-confirmar').addEventListener('click', async () => {
+  const data = await llamarApi('admin_renovar', { email: emailEnAccion, dias: $('renovar-dias').value, fecha: $('renovar-fecha').value });
+  if (data.success){ mostrarToast(`Renovada hasta ${data.fechaVencimiento}`); cerrarModal('overlay-renovar'); cargarLicencias(); }
+  else mostrarToast(data.message || 'Error', true);
+});
+function eliminar(email){
+  confirmarAccion(`¿Eliminar definitivamente la licencia de ${email}? Esto no se puede deshacer.`, async () => {
+    const data = await llamarApi('admin_eliminar', { email });
+    if (data.success){ mostrarToast('Licencia eliminada'); cargarLicencias(); }
+    else mostrarToast(data.message || 'Error', true);
+  }, 'Eliminar licencia', 'Eliminar');
+}
 
-document.getElementById('btn-renovar-confirmar').addEventListener('click', async () => {
-  const dias = document.getElementById('renovar-dias').value;
-  const fecha = document.getElementById('renovar-fecha').value;
+/* =========================================================
+   INSTALACIONES
+========================================================= */
+async function cargarInstalaciones(silencioso){
+  if (!silencioso) $('tabla-instalaciones').innerHTML = '<div class="loading">Cargando instalaciones…</div>';
+  try{
+    const data = await llamarApi('admin_instalaciones', {});
+    if (!data.success){ if (!silencioso) mostrarToast(data.message || 'Error al cargar', true); return; }
+    instalaciones = data.instalaciones || [];
+    ultimaVeekPOS = data.ultimaVeekPOS || null;
+    renderInstalaciones();
+    if (licencias.length) renderTabla();
+  } catch(err){
+    if (!silencioso) $('tabla-instalaciones').innerHTML = '<div class="empty-state">No se pudo conectar con el servidor.</div>';
+  }
+}
+$('btn-refrescar-instalaciones').addEventListener('click', () => cargarInstalaciones());
+$('buscar-instalaciones').addEventListener('input', renderInstalaciones);
+$('filtro-instalaciones').addEventListener('click', e => {
+  const chip = e.target.closest('.chip'); if (!chip) return;
+  filtroInstalaciones = chip.dataset.f;
+  $('filtro-instalaciones').querySelectorAll('.chip').forEach(c => c.classList.toggle('activa', c === chip));
+  renderInstalaciones();
+});
 
-  const data = await llamarApi('admin_renovar', { email: emailEnAccion, dias, fecha });
-  if (data.success){
-    mostrarToast(`Renovada hasta ${data.fechaVencimiento}`);
-    cerrarModal('overlay-renovar');
-    cargarLicencias();
-  } else {
-    mostrarToast(data.message || 'Error', true);
+const DIAS_SIN_CONTACTO = 7;
+function sinContacto(i){ return !i.ultimoContactoMs || (Date.now() - i.ultimoContactoMs) > DIAS_SIN_CONTACTO * 86400000; }
+function appAtrasada(i){ return i.producto === 'VeekPOS' && ultimaVeekPOS && (!i.versionApp || compararVersiones(i.versionApp, ultimaVeekPOS.version) < 0); }
+function backendAtrasado(i){
+  const objetivo = ultimaVeekPOS && (ultimaVeekPOS.versionBackend || ultimaVeekPOS.backendMinimo);
+  return i.producto === 'VeekPOS' && objetivo && i.versionBackend && compararVersiones(i.versionBackend, objetivo) < 0;
+}
+
+function renderInstalaciones(){
+  const pos = instalaciones.filter(i => i.producto === 'VeekPOS');
+  const iq = instalaciones.filter(i => i.producto === 'VeekIQ');
+  const sin = instalaciones.filter(i => i.producto !== 'VeekPOS' && i.producto !== 'VeekIQ');
+  $('tab-cuenta-instalaciones').textContent = instalaciones.length ? '(' + instalaciones.length + ')' : '';
+  const atrasadas = pos.filter(appAtrasada).length;
+  const backendViejo = new Set(pos.filter(backendAtrasado).map(i => i.negocio || i.email)).size;
+  $('stats-instalaciones').innerHTML =
+    `<div><b>${pos.length}</b>VeekPOS</div>` +
+    `<div><b>${iq.length}</b>VeekIQ</div>` +
+    (sin.length ? `<div><b>${sin.length}</b>sin identificar</div>` : '') +
+    (ultimaVeekPOS ? `<div class="${atrasadas ? 'aviso' : ''}"><b>${atrasadas}</b>cajas sin la ${escaparHtml(ultimaVeekPOS.version)}</div>` : '') +
+    (ultimaVeekPOS ? `<div class="${backendViejo ? 'aviso' : ''}"><b>${backendViejo}</b>negocios con backend viejo</div>` : '') +
+    `<div class="${instalaciones.filter(sinContacto).length ? 'alerta' : ''}"><b>${instalaciones.filter(sinContacto).length}</b>sin contacto (+${DIAS_SIN_CONTACTO} días)</div>`;
+
+  const q = $('buscar-instalaciones').value.trim().toLowerCase();
+  const lista = instalaciones
+    .filter(i => filtroInstalaciones === 'todos' || i.producto === filtroInstalaciones || (filtroInstalaciones === 'Sin identificar' && i.producto !== 'VeekPOS' && i.producto !== 'VeekIQ'))
+    .filter(i => !q || [i.negocio, i.email, i.equipo, i.id, i.sistema].some(v => String(v || '').toLowerCase().includes(q)))
+    .sort((a, b) => (a.producto || '').localeCompare(b.producto || '') || (a.negocio || a.email || '').localeCompare(b.negocio || b.email || '') || (b.ultimoContactoMs - a.ultimoContactoMs));
+
+  const cont = $('tabla-instalaciones');
+  if (!instalaciones.length){ cont.innerHTML = '<div class="empty-state">Todavía no se registró ningún equipo. Aparecen la próxima vez que cada app valide su licencia.</div>'; return; }
+  if (!lista.length){ cont.innerHTML = '<div class="empty-state">No hay equipos con ese filtro.</div>'; return; }
+
+  const rolTexto = { servidor: 'principal', cliente: 'secundaria', unica: 'única', '': '' };
+  let html = '<div class="tabla-scroll"><table><thead><tr>' +
+    '<th>Producto</th><th>Negocio / email</th><th>Equipo</th><th>Caja</th><th>App</th><th>Backend</th><th>Último contacto</th><th>Contactos</th><th></th>' +
+    '</tr></thead><tbody>';
+  lista.forEach(i => {
+    let app = i.versionApp ? `<span class="mono">${escaparHtml(i.versionApp)}</span>` : '<span class="sub" style="margin:0">no informa</span>';
+    if (i.producto === 'VeekPOS' && ultimaVeekPOS && i.versionApp) app += ' ' + (appAtrasada(i) ? '<span class="badge badge-atrasada">atrasada</span>' : '<span class="badge badge-ok">al día</span>');
+    let back = i.versionBackend ? `<span class="mono">${escaparHtml(i.versionBackend)}</span>` : '—';
+    if (backendAtrasado(i)) back += ' <span class="badge badge-atrasada">actualizar</span>';
+    const estadoAct = i.estadoActualizacion ? `<span class="sub">${escaparHtml(i.estadoActualizacion)}</span>` : '';
+    html += '<tr>';
+    html += `<td>${badgeProducto(i.producto)}</td>`;
+    html += `<td class="email-cell">${escaparHtml(i.negocio || i.email || '—')}${i.negocio && i.email ? `<span class="sub">${escaparHtml(i.email)}</span>` : ''}</td>`;
+    html += `<td>${escaparHtml(i.equipo || '—')}<span class="sub mono">${escaparHtml(i.id)}${i.sistema ? ' · ' + escaparHtml(i.sistema) : ''}</span></td>`;
+    html += `<td>${escaparHtml(rolTexto[i.rol] !== undefined ? rolTexto[i.rol] : i.rol) || '—'}</td>`;
+    html += `<td>${app}${estadoAct}</td>`;
+    html += `<td>${back}</td>`;
+    html += `<td>${sinContacto(i) ? '<span class="badge badge-mal">' + haceCuanto(i.ultimoContactoMs) + '</span>' : haceCuanto(i.ultimoContactoMs)}<span class="sub">${escaparHtml(i.ultimoContacto)}</span></td>`;
+    html += `<td class="mono">${i.contactos}<span class="sub">desde ${escaparHtml((i.primerContacto || '').slice(0, 10))}</span></td>`;
+    html += `<td><div class="row-actions"><button class="btn-ghost" data-quitar="${escaparAtributo(i.id)}" data-producto="${escaparAtributo(i.producto)}">Quitar</button></div></td>`;
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  cont.innerHTML = html;
+}
+$('tabla-instalaciones').addEventListener('click', e => {
+  const b = e.target.closest('[data-quitar]'); if (!b) return;
+  confirmarAccion('¿Quitar este equipo de la lista? Si la app vuelve a comunicarse, aparece de nuevo. No afecta la licencia.', async () => {
+    const data = await llamarApi('admin_eliminar_instalacion', { id: b.dataset.quitar, producto: b.dataset.producto });
+    if (data.success){ mostrarToast('Equipo quitado'); cargarInstalaciones(); }
+    else mostrarToast(data.message || 'Error', true);
+  }, 'Quitar equipo', 'Quitar');
+});
+
+/* =========================================================
+   VERSIONES
+========================================================= */
+async function cargarVersiones(){
+  try{
+    const data = await llamarApi('admin_versiones', {});
+    if (!data.success){ mostrarToast(data.message || 'Error al cargar', true); return; }
+    versiones = data.versiones || [];
+    ultimaVeekPOS = data.ultima || null;
+    renderVersiones();
+  } catch(err){
+    $('tabla-versiones').innerHTML = '<div class="empty-state">No se pudo conectar con el servidor.</div>';
+  }
+}
+$('btn-refrescar-versiones').addEventListener('click', cargarVersiones);
+
+function renderVersiones(){
+  const a = ultimaVeekPOS;
+  $('actual-contenido').innerHTML = a ? `
+    <div class="version-grande">${escaparHtml(a.version)}</div>
+    <div class="dato"><span>Backend mínimo</span><span class="mono">${escaparHtml(a.backendMinimo || '—')}</span></div>
+    <div class="dato"><span>Backend incluido</span><span class="mono">${escaparHtml(a.versionBackend || '—')}</span></div>
+    <div class="dato"><span>Publicada</span><span>${escaparHtml(a.fecha)}</span></div>
+    <div class="dato"><span>Archivos</span><span>${a.urlRelease ? `<a class="link" href="${escaparAtributo(a.urlRelease)}" target="_blank" rel="noopener">GitHub</a>` : ''}${a.urlBackend ? ` · <a class="link" href="${escaparAtributo(a.urlBackend)}" target="_blank" rel="noopener">code.gs</a>` : ''}</span></div>
+    ${a.notas ? `<div class="notas">${escaparHtml(a.notas)}</div>` : ''}`
+    : '<p class="hint" style="margin-top:10px;">Todavía no se publicó ninguna versión desde el panel. Las cajas no reciben actualizaciones hasta que publiques la primera.</p>';
+
+  if (!versiones.length){ $('tabla-versiones').innerHTML = '<div class="empty-state">Sin versiones publicadas.</div>'; return; }
+  let html = '<div class="tabla-scroll"><table><thead><tr><th>Versión</th><th>Backend mín.</th><th>Fecha</th><th>Estado</th><th>Qué cambió</th><th>Archivos</th><th></th></tr></thead><tbody>';
+  versiones.forEach(v => {
+    const esActual = a && v.version === a.version;
+    html += '<tr>';
+    html += `<td class="mono"><b>${escaparHtml(v.version)}</b>${esActual ? ' <span class="badge badge-ok">actual</span>' : ''}</td>`;
+    html += `<td class="mono">${escaparHtml(v.backendMinimo || '—')}</td>`;
+    html += `<td>${escaparHtml(v.fecha)}</td>`;
+    html += `<td>${v.estado === 'RETIRADA' ? '<span class="badge badge-suspendida">retirada</span>' : '<span class="badge badge-activa">publicada</span>'}</td>`;
+    html += `<td style="max-width:320px;">${escaparHtml((v.notas || '').slice(0, 160))}</td>`;
+    html += `<td style="white-space:nowrap;">${v.urlRelease ? `<a class="link" href="${escaparAtributo(v.urlRelease)}" target="_blank" rel="noopener">GitHub</a>` : ''}${v.urlBackend ? ` · <a class="link" href="${escaparAtributo(v.urlBackend)}" target="_blank" rel="noopener">code.gs</a>` : ''}</td>`;
+    html += `<td><div class="row-actions">${v.estado === 'RETIRADA'
+      ? `<button class="btn-secondary" data-estado="PUBLICADA" data-version="${escaparAtributo(v.version)}">Volver a publicar</button>`
+      : `<button class="btn-danger" data-estado="RETIRADA" data-version="${escaparAtributo(v.version)}">Retirar</button>`}</div></td>`;
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  $('tabla-versiones').innerHTML = html;
+}
+$('tabla-versiones').addEventListener('click', e => {
+  const b = e.target.closest('[data-estado]'); if (!b) return;
+  const version = b.dataset.version, estado = b.dataset.estado;
+  const hacer = async () => {
+    const data = await llamarApi('admin_estado_version', { version, estado });
+    if (data.success){ mostrarToast(estado === 'RETIRADA' ? 'Versión retirada' : 'Versión publicada'); cargarVersiones(); }
+    else mostrarToast(data.message || 'Error', true);
+  };
+  if (estado === 'RETIRADA'){
+    confirmarAccion(`Las cajas que todavía no instalaron la ${version} dejan de recibirla. Las que ya la tienen no vuelven atrás solas: para eso publicá una versión con un número más alto.`, hacer, 'Retirar ' + version, 'Retirar');
+  } else hacer();
+});
+
+/* ---------- GitHub: configuración ---------- */
+function leerGithub(){
+  for (const almacen of [() => localStorage, () => sessionStorage]){
+    try{ const v = almacen().getItem(CLAVE_GITHUB); if (v) return JSON.parse(v); } catch(e){}
+  }
+  return null;
+}
+function guardarGithub(cfg, recordar){
+  try{ localStorage.removeItem(CLAVE_GITHUB); sessionStorage.removeItem(CLAVE_GITHUB); } catch(e){}
+  try{ (recordar ? localStorage : sessionStorage).setItem(CLAVE_GITHUB, JSON.stringify(cfg)); } catch(e){}
+  guardarGithub._memoria = cfg;
+}
+const configGithub = () => leerGithub() || guardarGithub._memoria || null;
+
+function mostrarAvisoGithub(){
+  const cfg = configGithub();
+  $('aviso-github-publicar').innerHTML = cfg ? `<p class="hint" style="margin:-6px 0 14px;">Repositorio: <b>${escaparHtml(cfg.owner)}/${escaparHtml(cfg.repo)}</b> · <button class="link-btn" style="margin:0" onclick="abrirGithub()">cambiar</button></p>`
+    : `<div class="caja-aviso info" style="margin:0 0 16px;">Primero configurá el repositorio de GitHub. <button class="link-btn" style="margin:0;color:inherit;font-weight:600" onclick="abrirGithub()">Configurar</button></div>`;
+}
+function abrirGithub(){
+  const cfg = configGithub() || {};
+  $('gh-owner').value = cfg.owner || ''; $('gh-repo').value = cfg.repo || ''; $('gh-token').value = cfg.token || '';
+  $('gh-estado').innerHTML = '';
+  abrirModal('overlay-github');
+}
+$('btn-github').addEventListener('click', abrirGithub);
+
+async function gh(cfg, metodo, ruta, cuerpo){
+  const resp = await fetch(GITHUB_API + ruta, {
+    method: metodo,
+    headers: { 'Authorization': 'Bearer ' + cfg.token, 'Accept': 'application/vnd.github+json', ...(cuerpo ? { 'Content-Type': 'application/json' } : {}) },
+    body: cuerpo ? JSON.stringify(cuerpo) : undefined
+  });
+  let datos = null;
+  try{ datos = resp.status === 204 ? null : await resp.json(); } catch(e){}
+  return { ok: resp.ok, status: resp.status, datos };
+}
+function mensajeGithub(r){
+  if (r.status === 401) return 'El token no es válido o venció.';
+  if (r.status === 403) return 'El token no tiene permiso de escritura en ese repositorio (Contents: Read and write).';
+  if (r.status === 404) return 'No se encontró el repositorio, o el token no tiene acceso a él.';
+  return (r.datos && r.datos.message) ? 'GitHub: ' + r.datos.message : 'GitHub respondió ' + r.status;
+}
+
+$('btn-gh-guardar').addEventListener('click', async () => {
+  const cfg = { owner: $('gh-owner').value.trim(), repo: $('gh-repo').value.trim(), token: $('gh-token').value.trim() };
+  if (!cfg.owner || !cfg.repo || !cfg.token){ mostrarToast('Completá usuario, repositorio y token', true); return; }
+  const btn = $('btn-gh-guardar'); btn.disabled = true; btn.textContent = 'Probando…';
+  try{
+    const r = await gh(cfg, 'GET', `/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}`);
+    if (!r.ok){ $('gh-estado').innerHTML = `<div class="caja-aviso error">${escaparHtml(mensajeGithub(r))}</div>`; return; }
+    const avisos = [];
+    if (r.datos.private) avisos.push('El repositorio es <b>privado</b>: las cajas no van a poder bajar el instalador. Hacelo público (solo tiene las versiones, no el código).');
+    if (r.datos.permissions && !r.datos.permissions.push) avisos.push('El token puede leer pero no escribir: dale permiso <b>Contents: Read and write</b>.');
+    if (r.datos.size === 0 && !r.datos.default_branch) avisos.push('El repositorio está vacío: agregale un README desde GitHub.');
+    guardarGithub(cfg, $('gh-recordar').checked);
+    $('gh-estado').innerHTML = avisos.length ? `<div class="caja-aviso info">${avisos.join('<br>')}</div>` : '<div class="caja-aviso ok">Conectado. Listo para publicar.</div>';
+    mostrarAvisoGithub();
+  } catch(err){
+    $('gh-estado').innerHTML = '<div class="caja-aviso error">No se pudo conectar con GitHub.</div>';
+  } finally { btn.disabled = false; btn.textContent = 'Probar y guardar'; }
+});
+
+/* ---------- Publicar: lectura de archivos ---------- */
+let backendElegido = null; // { codigo: string, manifiesto: string|null, version: string|null, origen }
+
+$('pub-exe').addEventListener('change', () => {
+  const f = $('pub-exe').files[0];
+  $('pub-exe-info').textContent = '';
+  if (!f) return;
+  const m = f.name.match(/(\d+\.\d+\.\d+)/);
+  $('pub-exe-info').textContent = formatearBytes(f.size) + (m ? ' · versión ' + m[1] : '');
+  if (m && !$('pub-version').value) $('pub-version').value = m[1];
+});
+
+$('pub-backend').addEventListener('change', async () => {
+  const f = $('pub-backend').files[0];
+  backendElegido = null; $('pub-backend-info').textContent = '';
+  if (!f) return;
+  try{
+    if (/\.zip$/i.test(f.name)){
+      if (typeof JSZip === 'undefined') throw new Error('No se pudo cargar el lector de .zip (revisá la conexión)');
+      const zip = await JSZip.loadAsync(f);
+      const buscar = (re) => Object.values(zip.files).find(x => !x.dir && re.test(x.name));
+      const code = buscar(/(^|\/)backend\/code\.gs$/i);
+      if (!code) throw new Error('El .zip no tiene backend/code.gs');
+      const man = buscar(/(^|\/)backend\/appsscript\.json$/i);
+      backendElegido = { codigo: await code.async('string'), manifiesto: man ? await man.async('string') : null, origen: f.name };
+    } else {
+      backendElegido = { codigo: await f.text(), manifiesto: null, origen: f.name };
+    }
+    const m = backendElegido.codigo.match(/VERSION_BACKEND\s*=\s*["'](\d+\.\d+\.\d+)["']/);
+    backendElegido.version = m ? m[1] : null;
+    if (!/function\s+doGet\s*\(/.test(backendElegido.codigo)) throw new Error('Ese archivo no parece el code.gs de VeekPOS (no tiene doGet)');
+    $('pub-backend-info').textContent = 'code.gs ' + formatearBytes(backendElegido.codigo.length) + (backendElegido.version ? ' · versión ' + backendElegido.version : ' · sin VERSION_BACKEND') + (backendElegido.manifiesto ? ' · con appsscript.json' : '');
+    if (backendElegido.version){
+      if (!$('pub-backend-minimo').value) $('pub-backend-minimo').value = backendElegido.version;
+      if (!$('pub-version').value) $('pub-version').value = backendElegido.version;
+    }
+  } catch(err){
+    backendElegido = null;
+    $('pub-backend-info').innerHTML = '<span style="color:var(--danger)">' + escaparHtml(err.message) + '</span>';
   }
 });
 
-// ---------- ELIMINAR ----------
-async function eliminar(email){
-  if (!confirm(`¿Eliminar definitivamente la licencia de ${email}? Esto no se puede deshacer.`)) return;
-  const data = await llamarApi('admin_eliminar', { email });
-  if (data.success){ mostrarToast('Licencia eliminada'); cargarLicencias(); }
-  else mostrarToast(data.message || 'Error', true);
+/* ---------- Publicar: pasos ---------- */
+const PASOS = [
+  ['verificar', 'Verificar datos y repositorio'],
+  ['hash', 'Calcular la huella del instalador'],
+  ['release', 'Crear la versión en GitHub'],
+  ['subir', 'Subir archivos'],
+  ['publicar', 'Publicar en GitHub'],
+  ['registrar', 'Avisar a las cajas']
+];
+function iniciarPasos(){
+  $('pub-pasos').style.display = 'block';
+  $('pub-pasos').innerHTML = PASOS.map(([id, t]) => `<li id="paso-${id}"><span class="icono">·</span><span style="flex:1">${t}<span class="sub" id="paso-${id}-det"></span></span></li>`).join('');
+  $('pub-resultado').innerHTML = '';
+}
+function paso(id, estado, detalle){
+  const li = $('paso-' + id); if (!li) return;
+  li.className = estado;
+  li.querySelector('.icono').textContent = estado === 'hecho' ? '✓' : estado === 'fallo' ? '✕' : estado === 'en-curso' ? '›' : '·';
+  if (detalle !== undefined) $('paso-' + id + '-det').innerHTML = detalle;
+}
+
+async function sha512Base64(file){
+  if (!window.crypto || !crypto.subtle) throw new Error('El navegador no permite calcular la huella del instalador: abrí el panel desde su dirección https (GitHub Pages), no como archivo suelto.');
+  const buf = await file.arrayBuffer();
+  const dig = await crypto.subtle.digest('SHA-512', buf);
+  const bytes = new Uint8Array(dig);
+  let bin = ''; for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+/** latest.yml en el formato que lee electron-updater */
+function armarLatestYml(version, archivo, sha512, size){
+  const fecha = new Date().toISOString();
+  return `version: ${version}\nfiles:\n  - url: ${archivo}\n    sha512: ${sha512}\n    size: ${size}\npath: ${archivo}\nsha512: ${sha512}\nreleaseDate: '${fecha}'\n`;
+}
+
+/** Sube un asset con progreso (XMLHttpRequest para poder mostrar el avance) */
+function subirAsset(cfg, uploadUrl, nombre, contenido, tipo, alProgreso){
+  return new Promise((resolve, reject) => {
+    const url = uploadUrl.replace(/\{\?name,label\}$/, '') + '?name=' + encodeURIComponent(nombre);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + cfg.token);
+    xhr.setRequestHeader('Accept', 'application/vnd.github+json');
+    xhr.setRequestHeader('Content-Type', tipo || 'application/octet-stream');
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable && alProgreso) alProgreso(e.loaded / e.total); };
+    xhr.onload = () => {
+      let datos = null; try{ datos = JSON.parse(xhr.responseText); } catch(e){}
+      if (xhr.status >= 200 && xhr.status < 300) resolve(datos);
+      else reject(Object.assign(new Error(mensajeGithub({ status: xhr.status, datos })), { status: xhr.status }));
+    };
+    xhr.onerror = () => reject(Object.assign(new Error('El navegador no pudo subir el archivo a GitHub'), { red: true }));
+    xhr.send(contenido);
+  });
+}
+
+let publicando = false;
+let pendienteManual = null; // si la subida desde el navegador falla, se termina a mano
+
+$('btn-publicar').addEventListener('click', () => {
+  if (publicando) return;
+  const cfg = configGithub();
+  const exe = $('pub-exe').files[0];
+  const version = $('pub-version').value.trim();
+  const backendMinimo = $('pub-backend-minimo').value.trim();
+  const notas = $('pub-notas').value.trim();
+  if (!cfg){ abrirGithub(); return; }
+  if (!exe){ mostrarToast('Elegí el instalador (.exe)', true); return; }
+  if (!versionValida(version)){ mostrarToast('Versión inválida: usá el formato 2.3.0', true); return; }
+  if (backendMinimo && !versionValida(backendMinimo)){ mostrarToast('Backend mínimo inválido: usá el formato 2.3.0', true); return; }
+  const m = exe.name.match(/(\d+\.\d+\.\d+)/);
+  const avisos = [];
+  if (m && m[1] !== version) avisos.push(`El instalador dice ${m[1]} y la versión a publicar es ${version}.`);
+  if (ultimaVeekPOS && compararVersiones(version, ultimaVeekPOS.version) <= 0) avisos.push(`La versión actual es ${ultimaVeekPOS.version}: las cajas solo instalan versiones con un número más alto.`);
+  if (!backendElegido) avisos.push('No elegiste el backend: se publica solo el instalador.');
+  else if (backendElegido.version && backendElegido.version !== version) avisos.push(`El backend elegido es ${backendElegido.version}.`);
+  if (backendMinimo && backendElegido && backendElegido.version && compararVersiones(backendMinimo, backendElegido.version) > 0) avisos.push(`El backend mínimo (${backendMinimo}) es más nuevo que el backend incluido (${backendElegido.version}): ninguna caja podría actualizarse.`);
+  const mensaje = `Se publica VeekPOS ${version} en ${cfg.owner}/${cfg.repo} y todas las cajas con backend ${backendMinimo || 'cualquiera'} o más nuevo la instalan al cerrarse.` + (avisos.length ? '\n\n⚠ ' + avisos.join('\n⚠ ') : '');
+  confirmarAccion(mensaje, () => publicar(cfg, exe, version, backendMinimo, notas), 'Publicar ' + version, 'Publicar');
+});
+
+async function publicar(cfg, exe, version, backendMinimo, notas){
+  publicando = true; pendienteManual = null;
+  const btn = $('btn-publicar'); btn.disabled = true; btn.textContent = 'Publicando…';
+  iniciarPasos();
+  const repo = `/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}`;
+  const tag = 'v' + version;
+  const archivoExe = `VeekPOS-Setup-${version}.exe`;
+  const urlBase = `https://github.com/${cfg.owner}/${cfg.repo}/releases/download/${tag}`;
+  let actual = 'verificar';
+  try{
+    // 1. repositorio
+    paso('verificar', 'en-curso');
+    const rRepo = await gh(cfg, 'GET', repo);
+    if (!rRepo.ok) throw new Error(mensajeGithub(rRepo));
+    if (rRepo.datos.private) throw new Error('El repositorio es privado: las cajas no podrían bajar el instalador. Hacelo público.');
+    if (rRepo.datos.permissions && !rRepo.datos.permissions.push) throw new Error('El token no puede escribir en el repositorio.');
+    paso('verificar', 'hecho', `${escaparHtml(cfg.owner)}/${escaparHtml(cfg.repo)}`);
+
+    // 2. huella
+    actual = 'hash'; paso('hash', 'en-curso', formatearBytes(exe.size));
+    const sha512 = await sha512Base64(exe);
+    const latest = armarLatestYml(version, archivoExe, sha512, exe.size);
+    paso('hash', 'hecho');
+
+    // 3. release (borrador hasta que estén todos los archivos)
+    actual = 'release'; paso('release', 'en-curso', tag);
+    let release = null;
+    const existente = await gh(cfg, 'GET', `${repo}/releases/tags/${encodeURIComponent(tag)}`);
+    if (existente.ok) release = existente.datos;
+    else {
+      // un borrador no aparece por tag: se busca en la lista
+      const lista = await gh(cfg, 'GET', `${repo}/releases?per_page=30`);
+      if (lista.ok) release = (lista.datos || []).find(x => x.tag_name === tag) || null;
+    }
+    if (release){
+      await gh(cfg, 'PATCH', `${repo}/releases/${release.id}`, { name: 'VeekPOS ' + version, body: notas, draft: true });
+    } else {
+      const creado = await gh(cfg, 'POST', `${repo}/releases`, { tag_name: tag, name: 'VeekPOS ' + version, body: notas, draft: true });
+      if (!creado.ok){
+        if (creado.status === 422 && /empty|ref/i.test(JSON.stringify(creado.datos || ''))) throw new Error('El repositorio está vacío: agregale un README desde GitHub y volvé a intentar.');
+        throw new Error(mensajeGithub(creado));
+      }
+      release = creado.datos;
+    }
+    paso('release', 'hecho', 'borrador');
+
+    // 4. archivos (los que ya estaban con el mismo nombre se reemplazan)
+    actual = 'subir'; paso('subir', 'en-curso');
+    const archivos = [
+      { nombre: archivoExe, contenido: exe, tipo: 'application/octet-stream', tam: exe.size },
+      { nombre: 'latest.yml', contenido: new Blob([latest], { type: 'text/yaml' }), tipo: 'text/yaml', tam: latest.length }
+    ];
+    if (backendElegido){
+      archivos.push({ nombre: 'code.gs', contenido: new Blob([backendElegido.codigo], { type: 'text/plain' }), tipo: 'text/plain', tam: backendElegido.codigo.length });
+      if (backendElegido.manifiesto) archivos.push({ nombre: 'appsscript.json', contenido: new Blob([backendElegido.manifiesto], { type: 'application/json' }), tipo: 'application/json', tam: backendElegido.manifiesto.length });
+    }
+    const assets = await gh(cfg, 'GET', `${repo}/releases/${release.id}/assets?per_page=100`);
+    for (const a of (assets.ok ? assets.datos : [])){
+      if (archivos.some(x => x.nombre === a.name)) await gh(cfg, 'DELETE', `${repo}/releases/assets/${a.id}`);
+    }
+    pendienteManual = { cfg, repo, release, version, backendMinimo, notas, archivoExe, urlBase, latest, archivos };
+    const total = archivos.reduce((s, a) => s + a.tam, 0);
+    let subidos = 0;
+    for (const a of archivos){
+      await subirAsset(cfg, release.upload_url, a.nombre, a.contenido, a.tipo, (p) => {
+        paso('subir', 'en-curso', `${escaparHtml(a.nombre)} · ${Math.round(((subidos + a.tam * p) / total) * 100)}%<div class="barra"><div style="width:${((subidos + a.tam * p) / total) * 100}%"></div></div>`);
+      });
+      subidos += a.tam;
+    }
+    paso('subir', 'hecho', archivos.map(a => escaparHtml(a.nombre)).join(' · '));
+
+    await terminarPublicacion();
+  } catch(err){
+    paso(actual, 'fallo', escaparHtml(err.message));
+    if (actual === 'subir' && err.red && pendienteManual){
+      mostrarSubidaManual();
+    } else {
+      $('pub-resultado').innerHTML = `<div class="caja-aviso error">${escaparHtml(err.message)}</div>`;
+    }
+  } finally {
+    publicando = false; btn.disabled = false; btn.textContent = 'Publicar versión';
+  }
+}
+
+/** Pasos 5 y 6: sacar el borrador y registrar la versión en el servidor de licencias */
+async function terminarPublicacion(){
+  const p = pendienteManual;
+  let actual = 'publicar';
+  paso('publicar', 'en-curso');
+  const pub = await gh(p.cfg, 'PATCH', `${p.repo}/releases/${p.release.id}`, { draft: false, make_latest: 'true' });
+  if (!pub.ok) throw new Error(mensajeGithub(pub));
+  // Comprobar que el instalador y latest.yml están en la versión publicada
+  const assets = await gh(p.cfg, 'GET', `${p.repo}/releases/${p.release.id}/assets?per_page=100`);
+  const nombres = (assets.ok ? assets.datos : []).map(a => a.name);
+  const faltan = [p.archivoExe, 'latest.yml'].filter(n => !nombres.includes(n));
+  if (faltan.length) throw new Error('Faltan en GitHub: ' + faltan.join(', ') + '. Subilos y tocá "Ya los subí".');
+  paso('publicar', 'hecho', `<a class="link" href="${escaparAtributo(pub.datos.html_url)}" target="_blank" rel="noopener">ver en GitHub</a>`);
+
+  paso('registrar', 'en-curso');
+  const tieneBackend = nombres.includes('code.gs');
+  const reg = await llamarApi('admin_registrar_version', {
+    version: p.version, backendMinimo: p.backendMinimo,
+    versionBackend: backendElegido && backendElegido.version ? backendElegido.version : '',
+    notas: p.notas, urlBase: p.urlBase, archivo: p.archivoExe, urlRelease: pub.datos.html_url,
+    urlBackend: tieneBackend ? p.urlBase + '/code.gs' : ''
+  });
+  if (!reg.success) throw new Error(reg.message || 'El servidor de licencias no registró la versión');
+  paso('registrar', 'hecho', 'las cajas la ven en su próxima consulta');
+  $('pub-resultado').innerHTML = `<div class="caja-aviso ok">VeekPOS ${escaparHtml(p.version)} publicada. Cada caja la baja de fondo y la instala al cerrarse${p.backendMinimo ? `, cuando su backend tenga la ${escaparHtml(p.backendMinimo)} o más nueva` : ''}.${tieneBackend ? ` Backend para pegar en cada negocio: <a href="${escaparAtributo(p.urlBase + '/code.gs')}" target="_blank" rel="noopener">code.gs</a>.` : ''}</div>`;
+  pendienteManual = null;
+  $('pub-exe').value = ''; $('pub-backend').value = ''; backendElegido = null;
+  $('pub-exe-info').textContent = ''; $('pub-backend-info').textContent = '';
+  $('pub-version').value = ''; $('pub-backend-minimo').value = ''; $('pub-notas').value = '';
+  cargarVersiones();
+}
+
+/** Si el navegador no puede subir (red, bloqueo), se suben a mano en GitHub y se termina desde acá */
+function mostrarSubidaManual(){
+  const p = pendienteManual;
+  const enlaces = p.archivos.filter(a => a.nombre !== p.archivoExe).map(a => {
+    const url = URL.createObjectURL(a.contenido);
+    return `<a href="${url}" download="${escaparAtributo(a.nombre)}">${escaparHtml(a.nombre)}</a>`;
+  }).join(' · ');
+  $('pub-resultado').innerHTML = `<div class="caja-aviso info">
+    El navegador no pudo subir los archivos. Terminalo a mano (la versión quedó como borrador, nadie la recibe todavía):<br><br>
+    1. Bajá estos archivos: ${enlaces}<br>
+    2. Abrí el <a href="https://github.com/${escaparAtributo(p.cfg.owner)}/${escaparAtributo(p.cfg.repo)}/releases" target="_blank" rel="noopener">borrador ${escaparHtml('v' + p.version)} en GitHub</a> → Editar, y arrastrá esos archivos más el instalador renombrado como <b>${escaparHtml(p.archivoExe)}</b>.<br>
+    3. Volvé acá: <button class="btn-secondary" id="btn-ya-subi" style="margin-top:8px;">Ya los subí: publicar</button>
+  </div>`;
+  $('btn-ya-subi').addEventListener('click', async (e) => {
+    e.currentTarget.disabled = true;
+    try{ await terminarPublicacion(); }
+    catch(err){ paso('publicar', 'fallo', escaparHtml(err.message)); mostrarToast(err.message, true); e.currentTarget.disabled = false; }
+  });
 }
 
 // ---------- CAMBIAR CONTRASEÑA ----------
-document.getElementById('btn-cambiar-password').addEventListener('click', () => {
-  document.getElementById('nuevo-username').value = '';
-  document.getElementById('nueva-password').value = '';
+$('btn-cambiar-password').addEventListener('click', () => {
+  $('nuevo-username').value = ''; $('nueva-password').value = '';
   abrirModal('overlay-password');
 });
-
-document.getElementById('btn-password-confirmar').addEventListener('click', async () => {
-  const nuevoUsername = document.getElementById('nuevo-username').value.trim();
-  const nuevaPassword = document.getElementById('nueva-password').value;
-
+$('btn-password-confirmar').addEventListener('click', async () => {
+  const nuevoUsername = $('nuevo-username').value.trim();
+  const nuevaPassword = $('nueva-password').value;
   if (!nuevoUsername && !nuevaPassword){ mostrarToast('No indicaste ningún cambio', true); return; }
   if (nuevoUsername && nuevoUsername.length < 3){ mostrarToast('El usuario debe tener al menos 3 caracteres', true); return; }
   if (nuevaPassword && nuevaPassword.length < 4){ mostrarToast('La contraseña debe tener al menos 4 caracteres', true); return; }
-
   const data = await llamarApi('admin_cambiar_password', { nuevoUsername, nuevaPassword });
   if (data.success){
     if (nuevoUsername) USERNAME = nuevoUsername;
     if (nuevaPassword) PASSWORD = nuevaPassword;
-    mostrarToast('Credenciales actualizadas');
-    cerrarModal('overlay-password');
-  } else {
-    mostrarToast(data.message || 'Error', true);
-  }
+    mostrarToast('Credenciales actualizadas'); cerrarModal('overlay-password');
+  } else mostrarToast(data.message || 'Error', true);
 });
 
 // ---------- RECUPERAR CONTRASEÑA ----------
-async function llamarApiPublica(accion, params){
-  const url = new URL(SERVER_URL);
-  url.searchParams.set('action', accion);
-  for (const clave in params){
-    if (params[clave] !== undefined && params[clave] !== null && params[clave] !== '') {
-      url.searchParams.set(clave, params[clave]);
-    }
-  }
-  const resp = await fetch(url.toString());
-  return resp.json();
-}
-
-document.getElementById('btn-olvide').addEventListener('click', () => {
-  document.getElementById('recuperar-paso1').style.display = 'block';
-  document.getElementById('recuperar-paso2').style.display = 'none';
-  ['recuperar-codigo','recuperar-password','recuperar-password2','recuperar-username']
-    .forEach(id => document.getElementById(id).value = '');
+$('btn-olvide').addEventListener('click', () => {
+  $('recuperar-paso1').style.display = 'block'; $('recuperar-paso2').style.display = 'none';
+  ['recuperar-codigo','recuperar-password','recuperar-password2','recuperar-username'].forEach(id => $(id).value = '');
   abrirModal('overlay-recuperar');
 });
-
 async function enviarCodigoRecuperacion(btn){
   const textoOriginal = btn.textContent;
   btn.disabled = true; btn.textContent = 'Enviando…';
   try{
     const data = await llamarApiPublica('admin_recuperar_solicitar', {});
     if (data.success){
-      document.getElementById('recuperar-destino').textContent =
-        `Código enviado a ${data.destino}. Vence en ${data.minutos} minutos (revisá también spam).`;
-      document.getElementById('recuperar-paso1').style.display = 'none';
-      document.getElementById('recuperar-paso2').style.display = 'block';
-      document.getElementById('recuperar-codigo').focus();
-    } else {
-      mostrarToast(data.message || 'No se pudo enviar el código', true);
-    }
-  } catch(err){
-    mostrarToast('No se pudo conectar con el servidor.', true);
-  } finally {
-    btn.disabled = false; btn.textContent = textoOriginal;
-  }
+      $('recuperar-destino').textContent = `Código enviado a ${data.destino}. Vence en ${data.minutos} minutos (revisá también spam).`;
+      $('recuperar-paso1').style.display = 'none'; $('recuperar-paso2').style.display = 'block';
+      $('recuperar-codigo').focus();
+    } else mostrarToast(data.message || 'No se pudo enviar el código', true);
+  } catch(err){ mostrarToast('No se pudo conectar con el servidor.', true); }
+  finally { btn.disabled = false; btn.textContent = textoOriginal; }
 }
-document.getElementById('btn-recuperar-enviar').addEventListener('click', e => enviarCodigoRecuperacion(e.currentTarget));
-document.getElementById('btn-recuperar-reenviar').addEventListener('click', e => enviarCodigoRecuperacion(e.currentTarget));
-
-document.getElementById('btn-recuperar-confirmar').addEventListener('click', async e => {
-  const codigo = document.getElementById('recuperar-codigo').value.trim();
-  const nuevaPassword = document.getElementById('recuperar-password').value;
-  const repetir = document.getElementById('recuperar-password2').value;
-  const nuevoUsername = document.getElementById('recuperar-username').value.trim();
-
+$('btn-recuperar-enviar').addEventListener('click', e => enviarCodigoRecuperacion(e.currentTarget));
+$('btn-recuperar-reenviar').addEventListener('click', e => enviarCodigoRecuperacion(e.currentTarget));
+$('btn-recuperar-confirmar').addEventListener('click', async e => {
+  const codigo = $('recuperar-codigo').value.trim();
+  const nuevaPassword = $('recuperar-password').value;
+  const repetir = $('recuperar-password2').value;
+  const nuevoUsername = $('recuperar-username').value.trim();
   if (!/^\d{6}$/.test(codigo)){ mostrarToast('El código tiene 6 dígitos', true); return; }
   if (nuevaPassword.length < 4){ mostrarToast('La contraseña debe tener al menos 4 caracteres', true); return; }
   if (nuevaPassword !== repetir){ mostrarToast('Las contraseñas no coinciden', true); return; }
   if (nuevoUsername && nuevoUsername.length < 3){ mostrarToast('El usuario debe tener al menos 3 caracteres', true); return; }
-
   const btn = e.currentTarget;
   btn.disabled = true; btn.textContent = 'Guardando…';
   try{
     const data = await llamarApiPublica('admin_recuperar_confirmar', { codigo, nuevaPassword, nuevoUsername });
     if (data.success){
       cerrarModal('overlay-recuperar');
-      document.getElementById('username-login').value = data.username;
-      document.getElementById('password-login').value = '';
-      document.getElementById('password-login').focus();
+      $('username-login').value = data.username; $('password-login').value = ''; $('password-login').focus();
       mostrarToast(`Contraseña actualizada. Ingresá con el usuario "${data.username}".`);
-    } else {
-      mostrarToast(data.message || 'No se pudo restablecer', true);
-    }
-  } catch(err){
-    mostrarToast('No se pudo conectar con el servidor.', true);
-  } finally {
-    btn.disabled = false; btn.textContent = 'Guardar';
-  }
+    } else mostrarToast(data.message || 'No se pudo restablecer', true);
+  } catch(err){ mostrarToast('No se pudo conectar con el servidor.', true); }
+  finally { btn.disabled = false; btn.textContent = 'Guardar'; }
 });
 </script>
-
 </body>
 </html>
