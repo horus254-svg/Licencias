@@ -1078,7 +1078,8 @@ const PASOS = [
   ['verificar', 'Verificar datos y repositorio'],
   ['hash', 'Calcular la huella del instalador'],
   ['release', 'Crear la versión en GitHub'],
-  ['subir', 'Subir archivos'],
+  ['archivos', 'Guardar latest.yml y el backend'],
+  ['subir', 'Subir el instalador'],
   ['publicar', 'Publicar en GitHub'],
   ['registrar', 'Avisar a las cajas']
 ];
@@ -1103,10 +1104,34 @@ async function sha512Base64(file){
   return btoa(bin);
 }
 
-/** latest.yml en el formato que lee electron-updater */
-function armarLatestYml(version, archivo, sha512, size){
+/**
+ * latest.yml en el formato que lee electron-updater. El instalador se
+ * nombra con su dirección completa (la Release), porque latest.yml vive
+ * en otra parte (el repositorio).
+ */
+function armarLatestYml(version, urlExe, sha512, size){
   const fecha = new Date().toISOString();
-  return `version: ${version}\nfiles:\n  - url: ${archivo}\n    sha512: ${sha512}\n    size: ${size}\npath: ${archivo}\nsha512: ${sha512}\nreleaseDate: '${fecha}'\n`;
+  return `version: ${version}\nfiles:\n  - url: ${urlExe}\n    sha512: ${sha512}\n    size: ${size}\npath: ${urlExe}\nsha512: ${sha512}\nreleaseDate: '${fecha}'\n`;
+}
+
+function textoABase64(texto){
+  const bytes = new TextEncoder().encode(texto);
+  let bin = ''; const paso = 0x8000;
+  for (let i = 0; i < bytes.length; i += paso) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + paso));
+  return btoa(bin);
+}
+
+/**
+ * Guarda (o reemplaza) un archivo de texto en el repositorio. Esto sí se
+ * puede desde el navegador (api.github.com); las Releases no.
+ */
+async function guardarArchivoRepo(cfg, repo, rama, ruta, contenido, mensaje){
+  const rutaUrl = ruta.split('/').map(encodeURIComponent).join('/');
+  const previo = await gh(cfg, 'GET', `${repo}/contents/${rutaUrl}?ref=${encodeURIComponent(rama)}`);
+  const cuerpo = { message: mensaje, content: textoABase64(contenido), branch: rama };
+  if (previo.ok && previo.datos && previo.datos.sha) cuerpo.sha = previo.datos.sha;
+  const r = await gh(cfg, 'PUT', `${repo}/contents/${rutaUrl}`, cuerpo);
+  if (!r.ok) throw new Error(mensajeGithub(r));
 }
 
 /** Sube un asset con progreso (XMLHttpRequest para poder mostrar el avance) */
@@ -1124,13 +1149,23 @@ function subirAsset(cfg, uploadUrl, nombre, contenido, tipo, alProgreso){
       if (xhr.status >= 200 && xhr.status < 300) resolve(datos);
       else reject(Object.assign(new Error(mensajeGithub({ status: xhr.status, datos })), { status: xhr.status }));
     };
-    xhr.onerror = () => reject(Object.assign(new Error('El navegador no pudo subir el archivo a GitHub'), { red: true }));
+    xhr.onerror = () => reject(Object.assign(new Error('GitHub no deja subir el instalador desde el navegador'), { red: true }));
     xhr.send(contenido);
   });
 }
 
+/** El instalador ya adjunto a la Release: por nombre, o cualquier .exe del mismo tamaño (por si GitHub lo renombró) */
+async function buscarInstaladorEnRelease(p){
+  const r = await gh(p.cfg, 'GET', `${p.repo}/releases/${p.release.id}/assets?per_page=100`);
+  if (!r.ok) return null;
+  const subidos = (r.datos || []).filter(a => !a.state || a.state === 'uploaded');
+  return subidos.find(a => a.name === p.archivoExe && a.size === p.exe.size)
+      || subidos.find(a => /\.exe$/i.test(a.name) && a.size === p.exe.size) || null;
+}
+
 let publicando = false;
-let pendienteManual = null; // si la subida desde el navegador falla, se termina a mano
+let pendienteManual = null; // datos de la publicación mientras se espera el instalador
+let relojEspera = null;
 
 $('btn-publicar').addEventListener('click', () => {
   if (publicando) return;
@@ -1155,14 +1190,14 @@ $('btn-publicar').addEventListener('click', () => {
 });
 
 async function publicar(cfg, exe, version, backendMinimo, notas){
-  publicando = true; pendienteManual = null;
+  publicando = true; pendienteManual = null; clearInterval(relojEspera);
   const btn = $('btn-publicar'); btn.disabled = true; btn.textContent = 'Publicando…';
   iniciarPasos();
   const repo = `/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}`;
   const tag = 'v' + version;
   const archivoExe = `VeekPOS-Setup-${version}.exe`;
-  const urlBase = `https://github.com/${cfg.owner}/${cfg.repo}/releases/download/${tag}`;
   let actual = 'verificar';
+  let esperandoManual = false;
   try{
     // 1. repositorio
     paso('verificar', 'en-curso');
@@ -1170,21 +1205,20 @@ async function publicar(cfg, exe, version, backendMinimo, notas){
     if (!rRepo.ok) throw new Error(mensajeGithub(rRepo));
     if (rRepo.datos.private) throw new Error('El repositorio es privado: las cajas no podrían bajar el instalador. Hacelo público.');
     if (rRepo.datos.permissions && !rRepo.datos.permissions.push) throw new Error('El token no puede escribir en el repositorio.');
+    const rama = rRepo.datos.default_branch || 'main';
     paso('verificar', 'hecho', `${escaparHtml(cfg.owner)}/${escaparHtml(cfg.repo)}`);
 
     // 2. huella
     actual = 'hash'; paso('hash', 'en-curso', formatearBytes(exe.size));
     const sha512 = await sha512Base64(exe);
-    const latest = armarLatestYml(version, archivoExe, sha512, exe.size);
-    paso('hash', 'hecho');
+    paso('hash', 'hecho', formatearBytes(exe.size));
 
-    // 3. release (borrador hasta que estén todos los archivos)
+    // 3. release en borrador (nadie la recibe hasta el final)
     actual = 'release'; paso('release', 'en-curso', tag);
     let release = null;
     const existente = await gh(cfg, 'GET', `${repo}/releases/tags/${encodeURIComponent(tag)}`);
     if (existente.ok) release = existente.datos;
     else {
-      // un borrador no aparece por tag: se busca en la lista
       const lista = await gh(cfg, 'GET', `${repo}/releases?per_page=30`);
       if (lista.ok) release = (lista.datos || []).find(x => x.tag_name === tag) || null;
     }
@@ -1200,69 +1234,84 @@ async function publicar(cfg, exe, version, backendMinimo, notas){
     }
     paso('release', 'hecho', 'borrador');
 
-    // 4. archivos (los que ya estaban con el mismo nombre se reemplazan)
-    actual = 'subir'; paso('subir', 'en-curso');
-    const archivos = [
-      { nombre: archivoExe, contenido: exe, tipo: 'application/octet-stream', tam: exe.size },
-      { nombre: 'latest.yml', contenido: new Blob([latest], { type: 'text/yaml' }), tipo: 'text/yaml', tam: latest.length }
-    ];
+    // 4. latest.yml y backend, como archivos del repositorio (carpeta versiones/vX.Y.Z)
+    actual = 'archivos'; paso('archivos', 'en-curso');
+    const carpeta = `versiones/${tag}`;
+    const urlBase = `https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${rama}/${carpeta}`;
+    const urlExe = `https://github.com/${cfg.owner}/${cfg.repo}/releases/download/${tag}/${archivoExe}`;
+    pendienteManual = { cfg, repo, rama, carpeta, release, version, backendMinimo, notas, archivoExe, urlBase, urlExe, sha512, exe, urlBackend: '' };
+    await guardarArchivoRepo(cfg, repo, rama, `${carpeta}/latest.yml`, armarLatestYml(version, urlExe, sha512, exe.size), `VeekPOS ${version}: latest.yml`);
+    const guardados = ['latest.yml'];
     if (backendElegido){
-      archivos.push({ nombre: 'code.gs', contenido: new Blob([backendElegido.codigo], { type: 'text/plain' }), tipo: 'text/plain', tam: backendElegido.codigo.length });
-      if (backendElegido.manifiesto) archivos.push({ nombre: 'appsscript.json', contenido: new Blob([backendElegido.manifiesto], { type: 'application/json' }), tipo: 'application/json', tam: backendElegido.manifiesto.length });
+      await guardarArchivoRepo(cfg, repo, rama, `${carpeta}/code.gs`, backendElegido.codigo, `VeekPOS ${version}: backend`);
+      guardados.push('code.gs');
+      pendienteManual.urlBackend = `${urlBase}/code.gs`;
+      if (backendElegido.manifiesto){
+        await guardarArchivoRepo(cfg, repo, rama, `${carpeta}/appsscript.json`, backendElegido.manifiesto, `VeekPOS ${version}: appsscript.json`);
+        guardados.push('appsscript.json');
+      }
     }
-    const assets = await gh(cfg, 'GET', `${repo}/releases/${release.id}/assets?per_page=100`);
-    for (const a of (assets.ok ? assets.datos : [])){
-      if (archivos.some(x => x.nombre === a.name)) await gh(cfg, 'DELETE', `${repo}/releases/assets/${a.id}`);
-    }
-    pendienteManual = { cfg, repo, release, version, backendMinimo, notas, archivoExe, urlBase, latest, archivos };
-    const total = archivos.reduce((s, a) => s + a.tam, 0);
-    let subidos = 0;
-    for (const a of archivos){
-      await subirAsset(cfg, release.upload_url, a.nombre, a.contenido, a.tipo, (p) => {
-        paso('subir', 'en-curso', `${escaparHtml(a.nombre)} · ${Math.round(((subidos + a.tam * p) / total) * 100)}%<div class="barra"><div style="width:${((subidos + a.tam * p) / total) * 100}%"></div></div>`);
-      });
-      subidos += a.tam;
-    }
-    paso('subir', 'hecho', archivos.map(a => escaparHtml(a.nombre)).join(' · '));
+    paso('archivos', 'hecho', guardados.join(' · ') + ' en ' + escaparHtml(carpeta));
 
-    await terminarPublicacion();
+    // 5. instalador: si ya está adjunto, se sigue; si no, se intenta subir y, si GitHub
+    //    no lo permite desde el navegador, se adjunta a mano y el panel lo detecta solo
+    actual = 'subir'; paso('subir', 'en-curso');
+    let adjunto = await buscarInstaladorEnRelease(pendienteManual);
+    if (!adjunto){
+      try{
+        await subirAsset(cfg, release.upload_url, archivoExe, exe, 'application/octet-stream', (p) => {
+          paso('subir', 'en-curso', `${Math.round(p * 100)}%<div class="barra"><div style="width:${p * 100}%"></div></div>`);
+        });
+        adjunto = await buscarInstaladorEnRelease(pendienteManual);
+      } catch(err){
+        if (!err.red) throw err;
+        esperandoManual = true;
+        paso('subir', 'en-curso', 'esperando que lo adjuntes en GitHub…');
+        mostrarSubidaManual();
+        return;
+      }
+    }
+    await continuarConInstalador(adjunto);
   } catch(err){
     paso(actual, 'fallo', escaparHtml(err.message));
-    if (actual === 'subir' && err.red && pendienteManual){
-      mostrarSubidaManual();
-    } else {
-      $('pub-resultado').innerHTML = `<div class="caja-aviso error">${escaparHtml(err.message)}</div>`;
-    }
+    $('pub-resultado').innerHTML = `<div class="caja-aviso error">${escaparHtml(err.message)}</div>`;
   } finally {
-    publicando = false; btn.disabled = false; btn.textContent = 'Publicar versión';
+    if (!esperandoManual){ publicando = false; btn.disabled = false; btn.textContent = 'Publicar versión'; }
+    else { btn.textContent = 'Esperando el instalador…'; }
   }
 }
 
-/** Pasos 5 y 6: sacar el borrador y registrar la versión en el servidor de licencias */
+/** Con el instalador ya en la Release: si GitHub le cambió el nombre, se corrige latest.yml */
+async function continuarConInstalador(adjunto){
+  const p = pendienteManual;
+  if (!adjunto) throw new Error('El instalador no aparece en la versión de GitHub.');
+  if (adjunto.name !== p.archivoExe){
+    p.archivoExe = adjunto.name;
+    p.urlExe = `https://github.com/${p.cfg.owner}/${p.cfg.repo}/releases/download/v${p.version}/${encodeURIComponent(adjunto.name)}`;
+    await guardarArchivoRepo(p.cfg, p.repo, p.rama, `${p.carpeta}/latest.yml`, armarLatestYml(p.version, p.urlExe, p.sha512, p.exe.size), `VeekPOS ${p.version}: latest.yml`);
+  }
+  paso('subir', 'hecho', escaparHtml(adjunto.name) + ' · ' + formatearBytes(adjunto.size));
+  await terminarPublicacion();
+}
+
+/** Pasos 6 y 7: sacar el borrador y registrar la versión en el servidor de licencias */
 async function terminarPublicacion(){
   const p = pendienteManual;
-  let actual = 'publicar';
   paso('publicar', 'en-curso');
   const pub = await gh(p.cfg, 'PATCH', `${p.repo}/releases/${p.release.id}`, { draft: false, make_latest: 'true' });
   if (!pub.ok) throw new Error(mensajeGithub(pub));
-  // Comprobar que el instalador y latest.yml están en la versión publicada
-  const assets = await gh(p.cfg, 'GET', `${p.repo}/releases/${p.release.id}/assets?per_page=100`);
-  const nombres = (assets.ok ? assets.datos : []).map(a => a.name);
-  const faltan = [p.archivoExe, 'latest.yml'].filter(n => !nombres.includes(n));
-  if (faltan.length) throw new Error('Faltan en GitHub: ' + faltan.join(', ') + '. Subilos y tocá "Ya los subí".');
   paso('publicar', 'hecho', `<a class="link" href="${escaparAtributo(pub.datos.html_url)}" target="_blank" rel="noopener">ver en GitHub</a>`);
 
   paso('registrar', 'en-curso');
-  const tieneBackend = nombres.includes('code.gs');
   const reg = await llamarApi('admin_registrar_version', {
     version: p.version, backendMinimo: p.backendMinimo,
     versionBackend: backendElegido && backendElegido.version ? backendElegido.version : '',
     notas: p.notas, urlBase: p.urlBase, archivo: p.archivoExe, urlRelease: pub.datos.html_url,
-    urlBackend: tieneBackend ? p.urlBase + '/code.gs' : ''
+    urlBackend: p.urlBackend
   });
   if (!reg.success) throw new Error(reg.message || 'El servidor de licencias no registró la versión');
   paso('registrar', 'hecho', 'las cajas la ven en su próxima consulta');
-  $('pub-resultado').innerHTML = `<div class="caja-aviso ok">VeekPOS ${escaparHtml(p.version)} publicada. Cada caja la baja de fondo y la instala al cerrarse${p.backendMinimo ? `, cuando su backend tenga la ${escaparHtml(p.backendMinimo)} o más nueva` : ''}.${tieneBackend ? ` Backend para pegar en cada negocio: <a href="${escaparAtributo(p.urlBase + '/code.gs')}" target="_blank" rel="noopener">code.gs</a>.` : ''}</div>`;
+  $('pub-resultado').innerHTML = `<div class="caja-aviso ok">VeekPOS ${escaparHtml(p.version)} publicada. Cada caja la baja de fondo y la instala al cerrarse${p.backendMinimo ? `, cuando su backend tenga la ${escaparHtml(p.backendMinimo)} o más nueva` : ''}.${p.urlBackend ? ` Backend para pegar en cada negocio: <a href="${escaparAtributo(p.urlBackend)}" target="_blank" rel="noopener">code.gs</a>.` : ''}</div>`;
   pendienteManual = null;
   $('pub-exe').value = ''; $('pub-backend').value = ''; backendElegido = null;
   $('pub-exe-info').textContent = ''; $('pub-backend-info').textContent = '';
@@ -1270,24 +1319,57 @@ async function terminarPublicacion(){
   cargarVersiones();
 }
 
-/** Si el navegador no puede subir (red, bloqueo), se suben a mano en GitHub y se termina desde acá */
+function liberarBotonPublicar(){
+  publicando = false;
+  const btn = $('btn-publicar'); btn.disabled = false; btn.textContent = 'Publicar versión';
+}
+
+/**
+ * GitHub no deja que una página web suba archivos a una Release. Se adjunta
+ * el instalador a mano (un solo archivo) y el panel lo detecta solo.
+ */
 function mostrarSubidaManual(){
   const p = pendienteManual;
-  const enlaces = p.archivos.filter(a => a.nombre !== p.archivoExe).map(a => {
-    const url = URL.createObjectURL(a.contenido);
-    return `<a href="${url}" download="${escaparAtributo(a.nombre)}">${escaparHtml(a.nombre)}</a>`;
-  }).join(' · ');
+  const urlEditar = `https://github.com/${p.cfg.owner}/${p.cfg.repo}/releases/edit/v${p.version}`;
   $('pub-resultado').innerHTML = `<div class="caja-aviso info">
-    El navegador no pudo subir los archivos. Terminalo a mano (la versión quedó como borrador, nadie la recibe todavía):<br><br>
-    1. Bajá estos archivos: ${enlaces}<br>
-    2. Abrí la página de <a href="https://github.com/${escaparAtributo(p.cfg.owner)}/${escaparAtributo(p.cfg.repo)}/releases" target="_blank" rel="noopener">Releases</a> → en el borrador <b>${escaparHtml('v' + p.version)}</b> tocá el lápiz (Editar) y arrastrá esos archivos, más el instalador renombrado como <b>${escaparHtml(p.archivoExe)}</b>, al recuadro de abajo <b>"Attach binaries"</b>. Ahí se permiten archivos de hasta 2 GB.<br>
-    <b>No uses "Add file → Upload files"</b> del repositorio: eso guarda el archivo en el código y está limitado a 25 MB, y además las cajas no lo buscan ahí.<br>
-    3. Volvé acá: <button class="btn-secondary" id="btn-ya-subi" style="margin-top:8px;">Ya los subí: publicar</button>
+    <b>Falta un solo paso:</b> GitHub no deja que una página web suba el instalador, así que adjuntalo vos (latest.yml y el backend ya quedaron guardados):<br><br>
+    1. Abrí <a href="${escaparAtributo(urlEditar)}" target="_blank" rel="noopener">la versión v${escaparHtml(p.version)} en GitHub</a> (si no abre, entrá a <a href="https://github.com/${escaparAtributo(p.cfg.owner)}/${escaparAtributo(p.cfg.repo)}/releases" target="_blank" rel="noopener">Releases</a> y tocá el lápiz del borrador).<br>
+    2. Arrastrá <b>${escaparHtml(p.exe.name)}</b> (${formatearBytes(p.exe.size)}, está en <code>desktop/dist</code>) al recuadro <b>"Attach binaries by dropping them here"</b>, esperá que termine y tocá <b>"Save draft"</b>.<br>
+    3. Listo: este panel lo detecta solo y termina de publicar. <span id="espera-estado" class="sub">Revisando cada 10 segundos…</span><br>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <button class="btn-secondary" id="btn-ya-subi">Ya lo adjunté: revisar ahora</button>
+      <button class="btn-ghost" id="btn-cancelar-espera">Dejar para después</button>
+    </div>
+    <p class="hint" style="margin-top:10px;">No uses "Add file → Upload files" del repositorio: tiene límite de 25 MB y las cajas no buscan ahí. El recuadro de la Release acepta hasta 2 GB.</p>
   </div>`;
-  $('btn-ya-subi').addEventListener('click', async (e) => {
-    e.currentTarget.disabled = true;
-    try{ await terminarPublicacion(); }
-    catch(err){ paso('publicar', 'fallo', escaparHtml(err.message)); mostrarToast(err.message, true); e.currentTarget.disabled = false; }
+  let revisando = false;
+  const revisar = async (manual) => {
+    if (revisando || !pendienteManual) return;
+    revisando = true;
+    try{
+      const adjunto = await buscarInstaladorEnRelease(pendienteManual);
+      if (adjunto){
+        clearInterval(relojEspera);
+        await continuarConInstalador(adjunto);
+        liberarBotonPublicar();
+      } else {
+        const e = $('espera-estado'); if (e) e.textContent = 'Todavía no aparece (' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + '). Revisando cada 10 segundos…';
+        if (manual) mostrarToast('Todavía no aparece el instalador en la versión de GitHub. ¿Tocaste "Save draft"?', true);
+      }
+    } catch(err){
+      clearInterval(relojEspera);
+      paso('publicar', 'fallo', escaparHtml(err.message));
+      mostrarToast(err.message, true);
+      liberarBotonPublicar();
+    } finally { revisando = false; }
+  };
+  clearInterval(relojEspera);
+  relojEspera = setInterval(() => revisar(false), 10000);
+  $('btn-ya-subi').addEventListener('click', () => revisar(true));
+  $('btn-cancelar-espera').addEventListener('click', () => {
+    clearInterval(relojEspera); pendienteManual = null; liberarBotonPublicar();
+    paso('subir', 'fallo', 'pendiente');
+    $('pub-resultado').innerHTML = '<div class="caja-aviso info">Quedó como borrador: ninguna caja la recibe. Cuando quieras, volvé a tocar "Publicar versión" con el mismo instalador: retoma desde donde quedó.</div>';
   });
 }
 
