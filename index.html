@@ -401,7 +401,7 @@
 <div class="overlay" id="overlay-github">
   <div class="modal">
     <h2>Repositorio de actualizaciones</h2>
-    <p class="hint" style="margin:-10px 0 16px;">Un repositorio <b>público</b> de GitHub solo para las versiones (instalador y backend). Crealo con un README para que no quede vacío. Las cajas bajan de ahí el instalador.</p>
+    <p class="hint" style="margin:-10px 0 16px;">Un repositorio <b>público</b> de GitHub solo para las versiones (instalador y backend). Crealo con un README para que no quede vacío. El panel sube cada versión como <b>Release</b> (hasta 2 GB por archivo; el límite de 25 MB es solo para archivos subidos al código del repositorio). Las cajas bajan de ahí el instalador.</p>
     <div class="fila-2">
       <div class="field">
         <label>Usuario u organización</label>
@@ -1280,7 +1280,8 @@ function mostrarSubidaManual(){
   $('pub-resultado').innerHTML = `<div class="caja-aviso info">
     El navegador no pudo subir los archivos. Terminalo a mano (la versión quedó como borrador, nadie la recibe todavía):<br><br>
     1. Bajá estos archivos: ${enlaces}<br>
-    2. Abrí el <a href="https://github.com/${escaparAtributo(p.cfg.owner)}/${escaparAtributo(p.cfg.repo)}/releases" target="_blank" rel="noopener">borrador ${escaparHtml('v' + p.version)} en GitHub</a> → Editar, y arrastrá esos archivos más el instalador renombrado como <b>${escaparHtml(p.archivoExe)}</b>.<br>
+    2. Abrí la página de <a href="https://github.com/${escaparAtributo(p.cfg.owner)}/${escaparAtributo(p.cfg.repo)}/releases" target="_blank" rel="noopener">Releases</a> → en el borrador <b>${escaparHtml('v' + p.version)}</b> tocá el lápiz (Editar) y arrastrá esos archivos, más el instalador renombrado como <b>${escaparHtml(p.archivoExe)}</b>, al recuadro de abajo <b>"Attach binaries"</b>. Ahí se permiten archivos de hasta 2 GB.<br>
+    <b>No uses "Add file → Upload files"</b> del repositorio: eso guarda el archivo en el código y está limitado a 25 MB, y además las cajas no lo buscan ahí.<br>
     3. Volvé acá: <button class="btn-secondary" id="btn-ya-subi" style="margin-top:8px;">Ya los subí: publicar</button>
   </div>`;
   $('btn-ya-subi').addEventListener('click', async (e) => {
